@@ -1,8 +1,7 @@
-"""Phase 1 Entry Point: Database Connectivity and Ingestion Run Verification.
+"""Phase 2 Entry Point: Source Management and Pipeline Run Verification.
 
-This script tests connectivity to the Supabase PostgreSQL database,
-looks up the 'MyScheme' source in 'government_sources', and verifies
-the lifecycle of an 'ingestion_runs' record (running -> completed/failed).
+This script initializes government sources via the modular source abstraction layer,
+retrieves active source records from Supabase PostgreSQL, and manages ingestion run lifecycles.
 """
 
 import sys
@@ -17,60 +16,21 @@ if str(current_dir) not in sys.path:
 
 from config import Config, setup_logging
 from database import get_supabase_client, test_connection
+from sources import (
+    MySchemeSource,
+    SourceError,
+    SourceNotFoundError,
+    InactiveSourceError,
+    InvalidSourceConfigError,
+)
 
 logger = setup_logging("main")
 
 
-def get_or_lookup_source(client, source_name: str = "MyScheme") -> Optional[Dict[str, Any]]:
-    """Looks up a government source record by name.
-
-    Args:
-        client: The Supabase client instance.
-        source_name: Name of the government source to query.
-
-    Returns:
-        Optional[Dict[str, Any]]: The source record dictionary if found, else None.
-    """
-    logger.info("Looking up government source: '%s'...", source_name)
-    try:
-        response = (
-            client.table("government_sources")
-            .select("*")
-            .eq("name", source_name)
-            .limit(1)
-            .execute()
-        )
-        if response.data and len(response.data) > 0:
-            source = response.data[0]
-            logger.info(
-                "Found source '%s' (ID: %s, Type: %s, Active: %s)",
-                source.get("name"),
-                source.get("id"),
-                source.get("source_type"),
-                source.get("is_active"),
-            )
-            return source
-
-        logger.warning(
-            "Source '%s' not found in 'government_sources'. "
-            "Checking available sources in database...",
-            source_name,
-        )
-        all_sources_res = (
-            client.table("government_sources").select("id, name, is_active").execute()
-        )
-        if all_sources_res.data:
-            logger.info("Existing sources in database: %s", all_sources_res.data)
-        else:
-            logger.warning("No records currently exist in 'government_sources' table.")
-        return None
-    except Exception as e:
-        logger.error("Error querying 'government_sources': %s", str(e))
-        raise
-
-
 def create_ingestion_run(
-    client, source_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None
+    client: Any,
+    source_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Creates a new record in 'ingestion_runs' with status 'running'.
 
@@ -89,7 +49,7 @@ def create_ingestion_run(
         "documents_found": 0,
         "documents_processed": 0,
         "documents_failed": 0,
-        "metadata": metadata or {"phase": "phase_1_test", "mode": "connectivity_verification"},
+        "metadata": metadata or {"phase": "phase_2_source_management"},
     }
     if source_id:
         run_payload["source_id"] = source_id
@@ -106,7 +66,7 @@ def create_ingestion_run(
 
 
 def update_ingestion_run_completed(
-    client,
+    client: Any,
     run_id: str,
     documents_found: int = 0,
     documents_processed: int = 0,
@@ -148,7 +108,9 @@ def update_ingestion_run_completed(
     return updated_record
 
 
-def update_ingestion_run_failed(client, run_id: str, error_message: str) -> Optional[Dict[str, Any]]:
+def update_ingestion_run_failed(
+    client: Any, run_id: str, error_message: str
+) -> Optional[Dict[str, Any]]:
     """Marks an ingestion run as failed with error details.
 
     Args:
@@ -174,102 +136,115 @@ def update_ingestion_run_failed(client, run_id: str, error_message: str) -> Opti
         return None
 
 
-def run_phase_1_test() -> bool:
-    """Executes the complete Phase 1 database connection and ingestion run test.
+def run_phase_2_source_management() -> bool:
+    """Executes the Phase 2 Source Management verification workflow.
 
     Returns:
         bool: True if test passes, False otherwise.
     """
-    print("=" * 60)
-    print(" RuralEdge — Government Data Ingestion Pipeline (Phase 1) ")
-    print("=" * 60)
-
-    # Step 1: Configuration Validation
+    # Step 1: Validate Configuration
     logger.info("Validating environment configuration...")
     try:
         Config.validate()
-        logger.info("Configuration validated: Supabase URL is %s", Config.masked_url())
     except Exception as e:
-        logger.error("Configuration validation failed: %s", str(e))
-        print("\n[FAILED] Configuration Error:", str(e))
+        logger.error("Configuration error: %s", str(e))
+        print(f"\n[FAILED] Configuration Error: {e}")
         return False
 
-    # Step 2: Test Database Connectivity
-    logger.info("Testing Supabase database connectivity...")
+    # Step 2: Database Connectivity Check
+    logger.info("Connecting to Supabase PostgreSQL database...")
     try:
         client = get_supabase_client()
         if not test_connection():
-            print("\n[FAILED] Unable to query database tables. Check connection and permissions.")
+            print("\n[FAILED] Database connectivity test failed.")
             return False
     except Exception as e:
-        logger.error("Database connection failed: %s", str(e))
-        print("\n[FAILED] Database Connection Error:", str(e))
+        logger.error("Database connection error: %s", str(e))
+        print(f"\n[FAILED] Database Connection Error: {e}")
         return False
 
-    # Step 3: Source Lookup (MyScheme)
-    source_record = None
-    source_id = None
+    # Step 3: Source Abstraction Initialization (MyScheme)
+    logger.info("Initializing MyScheme source abstraction...")
+    myscheme_source = MySchemeSource()
     try:
-        source_record = get_or_lookup_source(client, "MyScheme")
-        if source_record:
-            source_id = source_record.get("id")
-    except Exception as e:
-        logger.error("Failed during source lookup: %s", str(e))
-        print("\n[FAILED] Source lookup error:", str(e))
+        source_record = myscheme_source.load_source_record(client)
+    except SourceNotFoundError as e:
+        logger.error("Source not found error: %s", str(e))
+        print(f"\n[FAILED] Source Lookup Error: {e}")
+        return False
+    except InactiveSourceError as e:
+        logger.error("Inactive source error: %s", str(e))
+        print(f"\n[FAILED] Inactive Source Error: {e}")
+        return False
+    except InvalidSourceConfigError as e:
+        logger.error("Invalid source config error: %s", str(e))
+        print(f"\n[FAILED] Source Config Error: {e}")
+        return False
+    except SourceError as e:
+        logger.error("Source error: %s", str(e))
+        print(f"\n[FAILED] Source Error: {e}")
         return False
 
-    # Step 4: Ingestion Run Lifecycle Test
+    # Perform lightweight controlled availability check
+    fetch_result = myscheme_source.fetch()
+
+    # Step 4: Display Output as Required by Phase 2 Specification
+    print("=" * 60)
+    print("RuralEdge — Government Data Ingestion Pipeline")
+    print("=" * 60)
+    print()
+    print(f"Source: {myscheme_source.source_name}")
+    print(f"Organization: {myscheme_source.organization or 'Government of India'}")
+    print(f"URL: {myscheme_source.base_url}")
+    print(f"Status: {'active' if myscheme_source.is_active else 'inactive'}")
+    print()
+
+    # Step 5: Ingestion Run Lifecycle Tracking
     run_record = None
     try:
-        # Create run in 'running' state
         run_record = create_ingestion_run(
             client=client,
-            source_id=source_id,
+            source_id=myscheme_source.source_id,
             metadata={
-                "test_name": "phase_1_connection_test",
-                "source_name": "MyScheme" if source_record else "Unlinked (Test)",
+                "phase": "phase_2_source_management",
+                "source_name": myscheme_source.source_name,
+                "availability_check": fetch_result.get("availability"),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )
-        run_id = run_record["id"]
 
-        # Step 5: Mark run as completed
+        # Mark run as completed
         completed_record = update_ingestion_run_completed(
             client=client,
-            run_id=run_id,
+            run_id=run_record["id"],
             documents_found=0,
             documents_processed=0,
             documents_failed=0,
             additional_metadata={
-                "test_name": "phase_1_connection_test",
-                "source_name": "MyScheme" if source_record else "Unlinked (Test)",
-                "test_result": "SUCCESS",
+                "phase": "phase_2_source_management",
+                "source_name": myscheme_source.source_name,
+                "result": "SUCCESS",
             },
         )
+        logger.info(
+            "Ingestion run %s completed successfully for source %s.",
+            completed_record["id"],
+            myscheme_source.source_name,
+        )
 
-        print("\n" + "=" * 60)
-        print(" PHASE 1 VERIFICATION COMPLETED SUCCESSFULLY ")
+        print("Source management test successful.")
+        print()
         print("=" * 60)
-        print(f"Supabase Project URL : {Config.masked_url()}")
-        print(f"Government Source    : {source_record.get('name') if source_record else 'None found'}")
-        if source_id:
-            print(f"Source ID            : {source_id}")
-        print(f"Ingestion Run ID     : {completed_record.get('id')}")
-        print(f"Initial Status       : running")
-        print(f"Final Status         : {completed_record.get('status')}")
-        print(f"Started At           : {completed_record.get('started_at')}")
-        print(f"Completed At         : {completed_record.get('completed_at')}")
-        print("=" * 60 + "\n")
         return True
 
     except Exception as e:
-        logger.error("Ingestion run lifecycle test encountered an error: %s", str(e))
+        logger.error("Error during ingestion_runs lifecycle management: %s", str(e))
         if run_record and "id" in run_record:
             update_ingestion_run_failed(client, run_record["id"], str(e))
-        print("\n[FAILED] Ingestion Run Test Error:", str(e))
+        print(f"\n[FAILED] Ingestion Run Lifecycle Error: {e}")
         return False
 
 
 if __name__ == "__main__":
-    success = run_phase_1_test()
+    success = run_phase_2_source_management()
     sys.exit(0 if success else 1)
