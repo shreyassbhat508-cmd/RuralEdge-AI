@@ -30,7 +30,7 @@ export function LanguagesSection() {
             speaks seven Indian languages and explains every term in plain,
             everyday words — so nothing gets lost in translation.
           </p>
-          <p className="mt-4 text-sm font-medium text-charcoal dark:text-background">
+          <p className="mt-4 text-sm font-medium text-foreground">
             English · हिंदी · ಕನ್ನಡ · தமிழ் · తెలుగు · मराठी · বাংলা
           </p>
         </Reveal>

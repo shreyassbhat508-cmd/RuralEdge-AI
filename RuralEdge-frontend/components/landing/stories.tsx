@@ -20,7 +20,7 @@ const STORIES = [
     role: 'Food processing · Nashik, MH',
     type: 'food' as const,
     tone: 'bg-charcoal text-white',
-    avatarBg: 'bg-sand text-charcoal',
+    avatarBg: 'bg-sand text-charcoal dark:text-foreground',
     initials: 'SP',
   },
   {

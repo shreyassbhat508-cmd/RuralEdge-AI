@@ -9,10 +9,10 @@ export function CtaBand() {
         <div className="relative overflow-hidden rounded-3xl bg-charcoal px-6 py-14 text-center shadow-lift sm:px-12 md:py-20">
           <div className="bg-field-lines absolute inset-0 opacity-30" aria-hidden />
           <div className="relative mx-auto max-w-2xl">
-            <h2 className="font-display text-3xl font-extrabold tracking-tight text-balance text-background md:text-4xl">
+            <h2 className="font-display text-3xl font-extrabold tracking-tight text-balance text-background dark:text-[#F5F7F5] md:text-4xl">
               Your next business decision deserves real clarity
             </h2>
-            <p className="mt-4 text-lg leading-relaxed text-background/80 text-pretty">
+            <p className="mt-4 text-lg leading-relaxed text-background/80 dark:text-[#B8C0CC] text-pretty">
               Start a free assessment and get your business health score, an
               affordable financing plan and the schemes you qualify for — in
               minutes.
@@ -27,7 +27,7 @@ export function CtaBand() {
               </Link>
               <Link
                 href="/advisor"
-                className="inline-flex items-center gap-2 rounded-full border border-sand/30 px-6 py-3.5 text-base font-semibold text-background transition-colors hover:bg-white/10"
+                className="inline-flex items-center gap-2 rounded-full border border-sand/30 px-6 py-3.5 text-base font-semibold text-background dark:text-[#D5DCE5] transition-colors hover:bg-white/10"
               >
                 Ask the AI Advisor
               </Link>

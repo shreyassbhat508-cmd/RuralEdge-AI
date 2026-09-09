@@ -40,7 +40,7 @@ import { cn } from '@/lib/utils'
 const QUICK_ACTIONS = [
   { href: '/market', icon: MapPinned, label: 'Market Intelligence', tone: 'text-primary bg-primary/10' },
   { href: '/finance', icon: Calculator, label: 'Financial Plan', tone: 'text-primary bg-primary/10' },
-  { href: '/schemes', icon: Landmark, label: 'Government Support', tone: 'text-charcoal bg-sand/40 dark:text-sand' },
+  { href: '/schemes', icon: Landmark, label: 'Government Support', tone: 'text-charcoal bg-sand/40 dark:text-foreground' },
   { href: '/advisor', icon: MessageCircle, label: 'Ask RuralEdge AI', tone: 'text-muted bg-muted/15' },
 ]
 

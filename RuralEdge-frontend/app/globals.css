@@ -105,12 +105,12 @@
   color-scheme: dark;
 
   /* DARK MODE Palette */
-  --background: #111827;
-  --foreground: #F9FAFB;
-  --card: #1F2937;
-  --card-foreground: #F9FAFB;
-  --popover: #1F2937;
-  --popover-foreground: #F9FAFB;
+  --background: #0F1412;
+  --foreground: #F5F7F5;
+  --card: #1B2430;
+  --card-foreground: #F5F7F5;
+  --popover: #1B2430;
+  --popover-foreground: #F5F7F5;
 
   /* Primary Action: Natural Green */
   --primary: #16A34A;
@@ -118,17 +118,17 @@
   --primary-foreground: #FFFFFF;
 
   /* Color System */
-  --charcoal: #030712;
-  --sand: #374151;
-  --brown: #111827;
+  --charcoal: #111927;
+  --sand: #1B2430;
+  --brown: #0F1412;
 
   /* Secondary & Muted */
-  --secondary: #374151;
-  --secondary-foreground: #F9FAFB;
-  --muted: #374151;
-  --muted-foreground: #9CA3AF;
+  --secondary: #111927;
+  --secondary-foreground: #AEB7C4;
+  --muted: #111927;
+  --muted-foreground: #9AA5B4;
   --accent: #16A34A;
-  --accent-foreground: #F9FAFB;
+  --accent-foreground: #F5F7F5;
 
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
@@ -138,16 +138,16 @@
   --warning: #F59E0B;
   --danger: #EF4444;
 
-  --border: #374151;
-  --input: #374151;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.12);
   --ring: #16A34A;
 
   /* Charts */
   --chart-1: #16A34A;
-  --chart-2: #1F2937;
+  --chart-2: #1B2430;
   --chart-3: #22C55E;
   --chart-4: #15803D;
-  --chart-5: #9CA3AF;
+  --chart-5: #8F99A8;
 }
 
 @layer base {

@@ -5,6 +5,7 @@ import './globals.css'
 import { BusinessProvider } from '@/components/business-context'
 import { ThemeProvider } from '@/components/theme-provider'
 import { GlobalBackground } from '@/components/global-background'
+import { IntroAnimation } from '@/components/intro-animation'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -44,6 +45,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased text-foreground bg-transparent transition-colors duration-300 min-h-screen">
         <GlobalBackground />
+        <IntroAnimation />
         <ThemeProvider>
           <BusinessProvider>{children}</BusinessProvider>
         </ThemeProvider>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 export function GlobalBackground() {
   return (
@@ -13,7 +13,7 @@ export function GlobalBackground() {
       <div className="absolute inset-0 bg-white/20 dark:opacity-0 transition-opacity duration-500" />
       
       {/* 3. Dark Mode Overlay (Dark charcoal/black, 55% opacity) */}
-      <div className="absolute inset-0 bg-[#030712]/55 opacity-0 dark:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-[#0F1412]/75 opacity-0 dark:opacity-100 transition-opacity duration-500" />
     </div>
   )
 }

@@ -38,7 +38,7 @@ const SITUATIONS = [
     title: 'Need financing',
     action: 'Find matching schemes',
     badge: 'Up to 90% Loan',
-    color: 'bg-charcoal/10 text-charcoal border-charcoal/20 dark:text-sand',
+    color: 'bg-charcoal/10 text-charcoal border-charcoal/20 dark:text-foreground',
     href: '/schemes',
   },
   {

@@ -43,7 +43,7 @@ export function Hero() {
             className="lg:col-span-7 xl:col-span-6 flex flex-col justify-center"
           >
             <motion.div variants={item}>
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-charcoal/40 px-4 py-1.5 text-xs font-semibold text-background shadow-sm backdrop-blur-md">
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-charcoal/40 px-4 py-1.5 text-xs font-semibold text-background dark:text-[#D5DCE5] shadow-sm backdrop-blur-md">
                 <Sparkles className="size-3.5 text-primary animate-pulse" />
                 Smart Finance for Rural India
               </span>
@@ -61,7 +61,7 @@ export function Hero() {
 
             <motion.p
               variants={item}
-              className="mt-6 max-w-xl text-lg leading-relaxed text-background/80 text-pretty font-medium"
+              className="mt-6 max-w-xl text-lg leading-relaxed text-background/80 dark:text-[#B8C0CC] text-pretty font-medium"
             >
               Helping rural entrepreneurs and farmers make smarter business and financial decisions with tailored local insights and government scheme matching.
             </motion.p>
@@ -128,7 +128,7 @@ export function Hero() {
                 <card.icon className="size-6" />
               </div>
               <div>
-                <h3 className="font-display text-lg font-bold text-charcoal">{card.title}</h3>
+                <h3 className="font-display text-lg font-bold text-foreground">{card.title}</h3>
                 <p className="mt-1 text-sm font-medium text-muted-foreground">{card.desc}</p>
               </div>
             </motion.div>
@@ -139,7 +139,7 @@ export function Hero() {
       {/* Stat / Trust Strip */}
       <div className="relative z-10 w-full border-t border-border/10 bg-charcoal/80 backdrop-blur-md mt-12 lg:mt-24">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-center gap-8 md:justify-between text-background/70 text-sm font-semibold">
+          <div className="flex flex-wrap items-center justify-center gap-8 md:justify-between text-background/70 dark:text-[#9AA5B4] text-sm font-semibold">
             <div className="flex items-center gap-2">
               <Landmark className="size-4 text-primary" />
               <span>Government Schemes</span>

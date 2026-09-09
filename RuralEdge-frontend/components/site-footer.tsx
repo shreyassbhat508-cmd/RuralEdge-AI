@@ -24,16 +24,16 @@ const COLS = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-secondary/40">
+    <footer className="border-t border-border bg-[#F7F6F0]/95 dark:bg-[#111613]/95 backdrop-blur-sm">
       <div className="crop-divider" aria-hidden />
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
         <div className="max-w-sm">
           <GramLogo />
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-4 text-sm leading-relaxed text-foreground/80">
             AI-powered business intelligence for rural entrepreneurs. Build the
             right business. Borrow with confidence.
           </p>
-          <p className="mt-4 text-xs font-medium text-charcoal dark:text-background">
+          <p className="mt-4 text-xs font-medium text-foreground/90">
             Built for rural and semi-urban entrepreneurs.
           </p>
         </div>
@@ -47,7 +47,7 @@ export function SiteFooter() {
                 <li key={l.label}>
                   <Link
                     href={l.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                    className="text-sm text-foreground/70 transition-colors hover:text-primary"
                   >
                     {l.label}
                   </Link>
@@ -58,7 +58,7 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="border-t border-border/70">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-foreground/70 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>© {new Date().getFullYear()} RuralEdge. A hackathon demo — figures are illustrative.</p>
           <p>Made in India for Bharat&apos;s entrepreneurs.</p>
         </div>

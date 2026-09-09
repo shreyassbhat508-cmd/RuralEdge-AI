@@ -10,7 +10,6 @@ import { useTheme } from '@/components/theme-provider'
 import { cn } from '@/lib/utils'
 
 export const NAV_LINKS = [
-  { href: '/advisor', label: 'Chatbot' },
   { href: '/schemes', label: 'Schemes' },
   { href: '/finance', label: 'Loan Calculator' },
   { href: '/market', label: 'My Business Plan' },
@@ -70,7 +69,7 @@ export function SiteNavbar() {
           <button
             type="button"
             aria-label="Profile"
-            className="hidden size-10 place-items-center rounded-full border border-border bg-card text-charcoal dark:text-sand transition-colors hover:bg-muted sm:grid"
+            className="hidden size-10 place-items-center rounded-full border border-border bg-card text-charcoal dark:text-foreground transition-colors hover:bg-muted sm:grid"
           >
             <User className="size-4.5" />
           </button>

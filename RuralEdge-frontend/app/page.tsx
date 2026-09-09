@@ -1,10 +1,10 @@
 import { AppShell } from '@/components/app-shell'
-import { AdvisorView } from '@/components/advisor/advisor-view'
+import { LandingPage } from '@/components/landing/landing-page'
 
 export default function HomePage() {
   return (
-    <AppShell footer={false}>
-      <AdvisorView />
+    <AppShell footer={true}>
+      <LandingPage />
     </AppShell>
   )
 }

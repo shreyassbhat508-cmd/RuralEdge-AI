@@ -37,7 +37,7 @@ const BADGE_CONFIG: Record<
   retail: {
     icon: Store,
     label: 'Retail',
-    color: 'text-charcoal dark:text-sand',
+    color: 'text-charcoal dark:text-foreground',
     bg: 'from-charcoal/20 to-sand/20',
     shadow: 'shadow-charcoal/20',
   },
@@ -58,21 +58,21 @@ const BADGE_CONFIG: Record<
   handicrafts: {
     icon: Palette,
     label: 'Handicrafts',
-    color: 'text-charcoal dark:text-sand',
+    color: 'text-charcoal dark:text-foreground',
     bg: 'from-charcoal/20 to-sand/20',
     shadow: 'shadow-charcoal/20',
   },
   services: {
     icon: Wrench,
     label: 'Services',
-    color: 'text-charcoal dark:text-sand',
+    color: 'text-charcoal dark:text-foreground',
     bg: 'from-charcoal/20 to-sand/20',
     shadow: 'shadow-charcoal/20',
   },
   other: {
     icon: Landmark,
     label: 'Other',
-    color: 'text-charcoal dark:text-sand',
+    color: 'text-charcoal dark:text-foreground',
     bg: 'from-charcoal/20 to-sand/20',
     shadow: 'shadow-charcoal/20',
   },

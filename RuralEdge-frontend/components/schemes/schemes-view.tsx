@@ -48,7 +48,7 @@ export function SchemesView() {
                   <Sparkles className="size-3.5 text-primary animate-pulse" />
                   {scheme.matchPct}% Eligibility Match
                 </span>
-                <span className="rounded-full bg-sand/40 px-3 py-1 text-xs font-bold text-charcoal dark:text-sand">
+                <span className="rounded-full bg-sand/40 dark:bg-[#2A3441] border border-transparent dark:border-white/10 px-3 py-1 text-xs font-bold text-charcoal dark:text-[#F5F7F5]">
                   {scheme.status}
                 </span>
               </div>
@@ -82,7 +82,7 @@ export function SchemesView() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Interest Rate</span>
-                  <p className="font-extrabold text-sm text-charcoal dark:text-sand">
+                  <p className="font-extrabold text-sm text-foreground">
                     {scheme.interestRate}% p.a.
                   </p>
                 </div>
@@ -147,7 +147,7 @@ export function SchemesView() {
 
             <div className="mt-6 space-y-4">
               <div className="rounded-2xl border border-border bg-background p-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-charcoal dark:text-sand mb-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground mb-2">
                   Key Scheme Benefits
                 </h4>
                 <ul className="space-y-2 text-xs text-foreground">
@@ -161,7 +161,7 @@ export function SchemesView() {
               </div>
 
               <div className="rounded-2xl border border-border bg-background p-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-charcoal dark:text-sand mb-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground mb-2">
                   Required Application Documents
                 </h4>
                 <ul className="space-y-2 text-xs text-foreground">

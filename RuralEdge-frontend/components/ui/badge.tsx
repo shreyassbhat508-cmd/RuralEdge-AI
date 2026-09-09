@@ -15,10 +15,10 @@ type Tone =
 
 const tones: Record<Tone, string> = {
   neutral: 'bg-muted text-muted-foreground',
-  forest: 'bg-charcoal/10 text-charcoal dark:bg-charcoal/40 dark:text-background',
+  forest: 'bg-charcoal/10 text-charcoal dark:bg-charcoal/40 dark:text-foreground',
   leaf: 'bg-muted/15 text-muted dark:text-muted',
   primary: 'bg-primary/12 text-primary border border-primary/20',
-  charcoal: 'bg-charcoal/10 text-charcoal dark:bg-charcoal/40 dark:text-background',
+  charcoal: 'bg-charcoal/10 text-charcoal dark:bg-charcoal/40 dark:text-foreground',
   muted: 'bg-muted/15 text-muted dark:text-muted',
   sand: 'bg-sand/40 text-brown dark:bg-sand/20 dark:text-sand',
   gold: 'bg-sand/50 text-brown dark:bg-sand/30 dark:text-sand',
