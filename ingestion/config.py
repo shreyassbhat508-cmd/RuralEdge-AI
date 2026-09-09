@@ -56,6 +56,17 @@ class Config:
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "").strip()
     SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "").strip()
 
+    # HTTP Fetcher Settings
+    DEFAULT_REQUEST_TIMEOUT: int = int(os.getenv("DEFAULT_REQUEST_TIMEOUT", "15"))
+    USER_AGENT: str = os.getenv(
+        "USER_AGENT",
+        "RuralEdge-Ingestion-Pipeline/1.0 (Government Data Indexing)",
+    )
+    # Maximum response size limit (Default: 10MB = 10 * 1024 * 1024 bytes)
+    MAX_RESPONSE_SIZE: int = int(
+        os.getenv("MAX_RESPONSE_SIZE", str(10 * 1024 * 1024))
+    )
+
     @classmethod
     def validate(cls) -> bool:
         """Validates that all required configuration settings are present and well-formed.
