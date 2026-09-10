@@ -78,8 +78,8 @@ class TestFeasibilityScoringEngine(unittest.TestCase):
         self.assertEqual(result.level, "Medium")
         self.assertTrue(50 <= result.score < 75)
 
-        # Verify fallback reason when competitor dataset is pending
-        self.assertTrue(any("Competitor location dataset unavailable" in r for r in result.reasons))
+        # Verify fallback reason when competitor dataset is unavailable
+        self.assertTrue(any("baseline competition score" in r or "unavailable" in r for r in result.reasons))
 
     def test_low_feasibility_scenario(self):
         """Test low feasibility case (2% equity, high competition, unlisted generic category)."""

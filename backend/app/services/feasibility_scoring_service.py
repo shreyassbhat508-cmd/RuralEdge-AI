@@ -194,9 +194,9 @@ def _evaluate_competition(
 ) -> Tuple[int, List[str]]:
     reasons = []
 
-    if market_info and market_info.status in ("success", "no_results", "available"):
+    if market_info and market_info.status in ("success", "available", "no_results") and market_info.competition_score is not None:
         score = market_info.competition_score
-        count = market_info.competitor_count
+        count = market_info.competitor_count or 0
         radius = market_info.radius_km
         if count == 0:
             reasons.append(f"Low competitor density within {radius} km")
@@ -207,9 +207,10 @@ def _evaluate_competition(
         else:
             reasons.append(f"High competitor density ({count} competitors within {radius} km)")
     else:
-        # Documented neutral fallback when competitor dataset is unavailable
+        # Documented neutral baseline when Google Places data is unavailable
         score = 70
-        reasons.append("Competitor location dataset unavailable for region; applied documented sector baseline score (70)")
+        msg = market_info.message if market_info and market_info.message else "Google Places data is currently unavailable."
+        reasons.append(f"{msg} Applied documented baseline competition score (70).")
 
     return score, reasons
 

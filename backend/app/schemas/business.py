@@ -94,11 +94,14 @@ class CompetitorDetail(BaseModel):
     """Details of an individual competing business from Places API."""
 
     name: str = Field(..., description="Business name")
-    address: Optional[str] = Field(None, description="Physical address or location")
     category: Optional[str] = Field(None, description="Business category/type")
+    address: Optional[str] = Field(None, description="Physical address or location")
+    latitude: Optional[float] = Field(None, description="Latitude coordinate")
+    longitude: Optional[float] = Field(None, description="Longitude coordinate")
     distance_km: Optional[float] = Field(None, description="Distance from target location in km")
-    rating: Optional[float] = Field(None, description="Average rating (0.0 - 5.0)")
-    user_ratings_total: Optional[int] = Field(None, description="Total user ratings count")
+    rating: Optional[float] = Field(None, description="Average rating (0.0 - 5.0) or null if unavailable")
+    user_ratings_total: Optional[int] = Field(None, description="Total user ratings count or null if unavailable")
+    source: str = Field(default="google_places", description="Data source provider")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -106,19 +109,31 @@ class CompetitorDetail(BaseModel):
 class MarketInfo(BaseModel):
     """Market / competitor intelligence section powered by Google Places API."""
 
-    source: str = Field(
-        default="fallback_unavailable",
-        description="Data provider ('google_places' | 'fallback_unavailable')",
-    )
     status: str = Field(
-        default="pending",
-        description="'success' | 'no_results' | 'pending' | 'unavailable' | 'error'",
+        default="unavailable",
+        description="'success' | 'unavailable'",
+    )
+    source: str = Field(
+        default="google_places",
+        description="Data provider ('google_places')",
     )
     radius_km: int = Field(default=10, ge=0)
-    competitor_count: int = Field(default=0, ge=0)
+    competitor_count: Optional[int] = Field(
+        default=None,
+        description="Number of nearby competitors found, or null if API data is unavailable",
+    )
     competitors: List[CompetitorDetail] = Field(default_factory=list)
-    market_reach_score: int = Field(default=0, ge=0, le=100)
-    competition_score: int = Field(default=70, ge=0, le=100, description="Competitor density feasibility score (0-100)")
+    market_reach_score: Optional[int] = Field(default=None, ge=0, le=100)
+    competition_score: Optional[int] = Field(
+        default=None,
+        ge=0,
+        le=100,
+        description="Deterministic competitor density feasibility score (0-100), or null if API unavailable",
+    )
+    message: Optional[str] = Field(
+        default=None,
+        description="Explanation message when API data is unavailable",
+    )
 
     model_config = ConfigDict(from_attributes=True)
 

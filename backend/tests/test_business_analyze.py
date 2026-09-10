@@ -65,7 +65,8 @@ class TestBusinessAnalyzeAPI(unittest.TestCase):
             self.assertEqual(data["business"]["location"]["village"], "Madikeri")
 
             # 2. Check market section
-            self.assertIn(data["market"]["status"], ["success", "no_results", "unavailable", "pending", "error"])
+            self.assertIn(data["market"]["status"], ["success", "unavailable"])
+            self.assertEqual(data["market"]["source"], "google_places")
             self.assertEqual(data["market"]["radius_km"], 10)
 
             # 3. Check opportunity section

@@ -34,7 +34,7 @@ from app.services.recommendation_service import get_recommendations
 # loan_calculator_service, because we need EMI with the reducing-balance formula.
 from finance.calculator import _calculate_loan_emi  # type: ignore[attr-defined]
 from app.services.feasibility_scoring_service import calculate_feasibility_score
-from app.services.competitor_service import get_competitor_analysis
+from app.services.google_places_service import get_google_places_competitor_analysis
 
 logger = logging.getLogger(__name__)
 
@@ -344,7 +344,7 @@ def analyze_business(request: BusinessAnalyzeRequest) -> BusinessAnalyzeResponse
     )
 
     # --- 3. Market & Competitor Intelligence (Google Places API) ---
-    market = get_competitor_analysis(
+    market = get_google_places_competitor_analysis(
         location=request.location,
         business_category=request.business_category,
         radius_km=10,
