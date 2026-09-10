@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
   Sparkles,
-  ArrowRight,
   CheckCircle2,
   TrendingUp,
   BadgeIndianRupee,
@@ -18,14 +17,32 @@ import {
   ALTERNATIVE_RECOMMENDATIONS,
   formatCompactINR,
   formatINR,
-  type RecommendationProfile,
 } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
 export function RecommendationView({ onComplete }: { onComplete?: () => void }) {
-  const { activeRecommendation, setActiveRecommendation, onboarding } = useBusiness()
+  const { activeRecommendation, setActiveRecommendation, onboarding, businessAnalysis } = useBusiness()
 
   const current = activeRecommendation || MAIN_RECOMMENDATION
+
+  const isMarketUnavailable = businessAnalysis?.market?.status === 'unavailable'
+  const competitorCount = businessAnalysis?.market?.competitor_count
+
+  const competitionText = isMarketUnavailable
+    ? 'Market data temporarily unavailable'
+    : competitorCount !== null && competitorCount !== undefined
+      ? `${competitorCount} competitors within ${businessAnalysis?.market?.radius_km || 10}km`
+      : 'Local analysis completed'
+
+  const competitionLevel = isMarketUnavailable
+    ? 'Unavailable'
+    : competitorCount !== null && competitorCount !== undefined
+      ? competitorCount > 5
+        ? 'High'
+        : competitorCount > 2
+          ? 'Moderate'
+          : 'Low'
+      : current.competitionLevel
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
@@ -33,7 +50,7 @@ export function RecommendationView({ onComplete }: { onComplete?: () => void }) 
       <div className="text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary">
           <Sparkles className="size-4 text-primary animate-pulse" />
-          AI Opportunity Engine Result
+          RuralEdge AI Feasibility Result
         </span>
         <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
           Your best opportunity
@@ -74,7 +91,7 @@ export function RecommendationView({ onComplete }: { onComplete?: () => void }) 
                 {current.matchScore}%
               </span>
               <span className="ml-1 text-xs font-bold text-primary uppercase">
-                Business Match
+                Feasibility Index
               </span>
             </div>
           </div>
@@ -100,7 +117,6 @@ export function RecommendationView({ onComplete }: { onComplete?: () => void }) 
             <p className="mt-1 text-xs font-semibold text-primary">
               {current.demandLabel}
             </p>
-            {/* Visual Ring Gauge Accent */}
             <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full"
@@ -121,7 +137,7 @@ export function RecommendationView({ onComplete }: { onComplete?: () => void }) 
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Estimated starting cost
+              Estimated project cost
             </p>
             <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div className="h-full bg-sand rounded-full w-full" />
@@ -140,7 +156,7 @@ export function RecommendationView({ onComplete }: { onComplete?: () => void }) 
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Potential financing
+              Potential scheme loan
             </p>
             <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div className="h-full bg-primary rounded-full w-[90%]" />
@@ -155,11 +171,11 @@ export function RecommendationView({ onComplete }: { onComplete?: () => void }) 
             </div>
             <div className="mt-3">
               <span className="text-2xl font-black text-foreground">
-                {current.competitionLevel}
+                {competitionLevel}
               </span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              3 competitors in 5km
+            <p className="mt-1 text-xs text-muted-foreground truncate" title={competitionText}>
+              {competitionText}
             </p>
             <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div className="h-full bg-muted rounded-full w-[50%]" />
@@ -170,7 +186,7 @@ export function RecommendationView({ onComplete }: { onComplete?: () => void }) 
         {/* Why We Recommend This */}
         <div className="mt-8 border-t border-border/80 pt-6">
           <h3 className="text-lg font-bold text-foreground">
-            Why we recommend this
+            Feasibility & Scheme Signals
           </h3>
           <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
             {current.whyWeRecommend.map((reason, idx) => (
@@ -185,7 +201,7 @@ export function RecommendationView({ onComplete }: { onComplete?: () => void }) 
         {/* Primary CTA */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/80 pt-6">
           <div className="text-xs text-muted-foreground">
-            Plan includes market analysis, scheme matching & EMI breakdown.
+            Backend analysis includes market intelligence, scheme matching & loan schedule.
           </div>
           <Link
             href="/dashboard"

@@ -2,18 +2,19 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { MapPin, Navigation, TrendingUp, Users, ShieldAlert, Award, ArrowRight, CheckCircle2, Coins, FileCheck, Lightbulb, Landmark } from 'lucide-react'
+import { MapPin, Navigation, TrendingUp, Building2, CheckCircle2, ShieldAlert, Sparkles, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RevenueTrendChart } from '@/components/charts/revenue-trend-chart'
 import { CostBreakdownChart } from '@/components/charts/cost-breakdown-chart'
 import { BreakEvenChart } from '@/components/charts/break-even-chart'
-import { MARKET_MARKERS, MARKET_REACH, OPPORTUNITY_RADAR, SWOT, RISKS, PRICING, OPERATING, buildBreakEven, formatINR, formatCompactINR } from '@/lib/data'
+import { MARKET_MARKERS, MARKET_REACH, OPPORTUNITY_RADAR, SWOT, RISKS, OPERATING, buildBreakEven, formatINR } from '@/lib/data'
 import { useBusiness } from '@/components/business-context'
 import { cn } from '@/lib/utils'
 
 const TABS = [
   'Overview',
   'Market Demand',
+  'Competitors',
   'Investment',
   'Operating Costs',
   'Expected Revenue',
@@ -24,13 +25,9 @@ const TABS = [
 ] as const
 
 export function MarketView() {
-  const { profile, activeRecommendation, finance, documents } = useBusiness()
+  const { profile, activeRecommendation, finance, businessAnalysis } = useBusiness()
   const [activeTab, setActiveTab] = useState<typeof TABS[number]>('Overview')
   const [activeCategory, setActiveCategory] = useState<string>('all')
-
-  const filteredMarkers = activeCategory === 'all'
-    ? MARKET_MARKERS
-    : MARKET_MARKERS.filter((m) => m.category === activeCategory)
 
   const breakEven = buildBreakEven(
     OPERATING.initialInvestment,
@@ -39,6 +36,14 @@ export function MarketView() {
   )
 
   const rec = activeRecommendation
+  const market = businessAnalysis?.market
+  const swot = businessAnalysis?.swot || SWOT
+  const isMarketUnavailable = market?.status === 'unavailable'
+  const realCompetitors = market?.competitors || []
+
+  const filteredMarkers = activeCategory === 'all'
+    ? MARKET_MARKERS
+    : MARKET_MARKERS.filter((m) => m.category === activeCategory)
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -60,7 +65,7 @@ export function MarketView() {
         <div className="flex items-center gap-3">
           <div className="rounded-2xl bg-primary/10 border border-primary/30 px-4 py-2 text-right">
             <span className="text-xs font-bold text-muted-foreground uppercase block">Viability Rating</span>
-            <span className="text-xl font-black text-primary">{rec.matchScore}% Match</span>
+            <span className="text-xl font-black text-primary">{businessAnalysis?.opportunity?.score ?? rec.matchScore}% Match</span>
           </div>
         </div>
       </div>
@@ -109,6 +114,32 @@ export function MarketView() {
                       ))}
                     </div>
                   </div>
+
+                  {/* SWOT Section from backend */}
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-border bg-background p-3.5">
+                      <span className="text-xs font-bold text-success uppercase block mb-1.5">Strengths</span>
+                      <ul className="space-y-1 text-xs text-muted-foreground">
+                        {swot.strengths.map((s, idx) => (
+                          <li key={idx} className="flex items-start gap-1.5">
+                            <span className="text-success font-bold">•</span>
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-background p-3.5">
+                      <span className="text-xs font-bold text-amber-500 uppercase block mb-1.5">Weaknesses / Risk Areas</span>
+                      <ul className="space-y-1 text-xs text-muted-foreground">
+                        {swot.weaknesses.map((w, idx) => (
+                          <li key={idx} className="flex items-start gap-1.5">
+                            <span className="text-amber-500 font-bold">•</span>
+                            <span>{w}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -118,7 +149,7 @@ export function MarketView() {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3 text-xs text-foreground">
-                    {rec.whyWeRecommend.map((reason, idx) => (
+                    {(businessAnalysis?.opportunity?.reasons?.length ? businessAnalysis.opportunity.reasons : rec.whyWeRecommend).map((reason, idx) => (
                       <li key={idx} className="flex items-start gap-2.5">
                         <CheckCircle2 className="size-4 text-success shrink-0 mt-0.5" />
                         <span>{reason}</span>
@@ -157,6 +188,12 @@ export function MarketView() {
                 </div>
               </CardHeader>
               <CardContent>
+                {isMarketUnavailable && (
+                  <div className="mb-4 flex items-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400">
+                    <AlertCircle className="size-4 shrink-0" />
+                    <span>Market data temporarily unavailable from live provider. Showing regional pattern preview.</span>
+                  </div>
+                )}
                 <div className="relative h-[360px] w-full overflow-hidden rounded-2xl border border-border bg-card/90">
                   <div className="absolute inset-0 bg-field-lines opacity-20" />
                   <div className="absolute inset-0 bg-contour opacity-30" />
@@ -234,6 +271,62 @@ export function MarketView() {
           </div>
         )}
 
+        {/* COMPETITORS TAB */}
+        {activeTab === 'Competitors' && (
+          <Card className="rounded-3xl border-border shadow-soft">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl font-bold">Local Competitor Intelligence</CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Nearby active enterprises identified via Google Places
+                  </p>
+                </div>
+                {market && (
+                  <span className={cn(
+                    'rounded-full px-3 py-1 text-xs font-extrabold',
+                    isMarketUnavailable ? 'bg-amber-500/10 text-amber-600' : 'bg-primary/10 text-primary',
+                  )}>
+                    {isMarketUnavailable ? 'Status: Live Data Unavailable' : `${market.competitor_count ?? realCompetitors.length} Competitors Found`}
+                  </span>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isMarketUnavailable ? (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center">
+                  <AlertCircle className="mx-auto size-8 text-amber-500 mb-2" />
+                  <h4 className="font-bold text-foreground text-sm">Market data temporarily unavailable</h4>
+                  <p className="mt-1 text-xs text-muted-foreground max-w-md mx-auto">
+                    Live competitor mapping for this location is temporarily unreachable. RuralEdge is using deterministic feasibility models for financial calculations.
+                  </p>
+                </div>
+              ) : realCompetitors.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {realCompetitors.map((c, i) => (
+                    <div key={i} className="rounded-2xl border border-border bg-background p-4 text-xs">
+                      <div className="flex items-center justify-between font-bold mb-1">
+                        <span className="text-foreground text-sm font-extrabold truncate">{c.name}</span>
+                        {c.rating && (
+                          <span className="text-amber-500 font-bold">★ {c.rating}</span>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground mb-2">{c.address || c.category || 'Local Competitor'}</p>
+                      {c.distance_km && (
+                        <span className="text-primary font-bold">{c.distance_km.toFixed(1)} km away</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-border bg-background p-6 text-center text-xs text-muted-foreground">
+                  No competing businesses found in the immediate 10km radius. This indicates an open market opportunity!
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* INVESTMENT TAB */}
         {activeTab === 'Investment' && (
           <div className="grid gap-6 lg:grid-cols-2">
@@ -257,11 +350,11 @@ export function MarketView() {
                   <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
                     <div>
                       <span className="text-muted-foreground">Total Project Cost</span>
-                      <p className="text-xl font-black text-foreground">{formatINR(finance.projectCost || rec.investmentAmount)}</p>
+                      <p className="text-xl font-black text-foreground">{formatINR(businessAnalysis?.finance?.project_cost || finance.projectCost || rec.investmentAmount)}</p>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Your Contribution</span>
-                      <p className="text-xl font-black text-primary">{formatINR(finance.margin)}</p>
+                      <p className="text-xl font-black text-primary">{formatINR(businessAnalysis?.finance?.own_contribution || finance.margin)}</p>
                     </div>
                   </div>
                 </div>
@@ -337,17 +430,16 @@ export function MarketView() {
         {activeTab === 'Risks' && (
           <Card className="rounded-3xl border-border shadow-soft">
             <CardHeader>
-              <CardTitle className="text-xl font-bold">Risk Assessment & Action Plan</CardTitle>
+              <CardTitle className="text-xl font-bold">Risk Assessment & SWOT Analysis</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {RISKS.map((r) => (
-                <div key={r.id} className="rounded-2xl border border-border bg-background p-4 text-xs">
+              {swot.threats.map((t, idx) => (
+                <div key={idx} className="rounded-2xl border border-border bg-background p-4 text-xs">
                   <div className="flex items-center justify-between font-bold mb-1">
-                    <span className="text-foreground text-sm">{r.title}</span>
-                    <span className="rounded-full bg-amber-500/10 text-amber-600 px-2.5 py-0.5">{r.level} Risk</span>
+                    <span className="text-foreground text-sm">Market Risk #{idx + 1}</span>
+                    <span className="rounded-full bg-amber-500/10 text-amber-600 px-2.5 py-0.5">Identified Risk</span>
                   </div>
-                  <p className="text-muted-foreground mb-2"><strong>Cause: </strong>{r.why}</p>
-                  <p className="text-primary font-bold"><strong>Action Step: </strong>{r.action}</p>
+                  <p className="text-muted-foreground">{t}</p>
                 </div>
               ))}
             </CardContent>
@@ -378,7 +470,10 @@ export function MarketView() {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-primary uppercase">Top Scheme Match</span>
-                  <h3 className="text-2xl font-extrabold text-foreground">PMEGP Subsidy & Term Loan</h3>
+                  <h3 className="text-2xl font-extrabold text-foreground">{businessAnalysis?.scheme?.recommended_scheme || 'PMEGP Subsidy & Term Loan'}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {businessAnalysis?.scheme?.reasons?.[0] || 'Matched with your rural location and profile criteria.'}
+                  </p>
                 </div>
                 <Link
                   href="/schemes"
@@ -447,4 +542,3 @@ function ResourceBox({ title, detail }: { title: string; detail: string }) {
     </div>
   )
 }
-

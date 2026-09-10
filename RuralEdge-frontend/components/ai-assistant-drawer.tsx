@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, MessageCircle, X, Send, Bot, User } from 'lucide-react'
+import { Sparkles, X, Send, Bot, User } from 'lucide-react'
 import { useBusiness } from '@/components/business-context'
 import { advisorReply, formatCompactINR, formatINR } from '@/lib/data'
+import { chatWithAI } from '@/lib/api'
 
 const QUICK_QUESTIONS = [
   'Why did you recommend dairy farming?',
@@ -16,7 +17,7 @@ const QUICK_QUESTIONS = [
 
 export function AiAssistantDrawer() {
   const [isOpen, setIsOpen] = useState(false)
-  const { profile, finance, onboarding, activeRecommendation } = useBusiness()
+  const { profile, finance, onboarding, activeRecommendation, language } = useBusiness()
   const [messages, setMessages] = useState<
     { sender: 'ai' | 'user'; text: string }[]
   >([
@@ -26,33 +27,57 @@ export function AiAssistantDrawer() {
     },
   ])
   const [input, setInput] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isOpen])
 
-  const handleSend = (textToSend?: string) => {
-    const query = textToSend || input
-    if (!query.trim()) return
+  const handleSend = async (textToSend?: string) => {
+    const query = (textToSend || input).trim()
+    if (!query) return
 
     const newMessages = [...messages, { sender: 'user' as const, text: query }]
     setMessages(newMessages)
     if (!textToSend) setInput('')
+    setIsTyping(true)
 
-    // Generate contextual response
-    setTimeout(() => {
+    try {
+      const languageMap: Record<string, string> = {
+        en: 'English',
+        hi: 'Hindi',
+        kn: 'Kannada',
+        ta: 'Tamil',
+        te: 'Telugu',
+        mr: 'Marathi',
+        bn: 'Bengali',
+      }
+
+      const res = await chatWithAI({
+        message: query,
+        user_context: {
+          state: onboarding.state || profile.state,
+          district: onboarding.district || profile.district,
+          occupation: profile.typeLabel,
+        },
+        language: languageMap[language] || 'English',
+      })
+
+      setMessages((prev) => [...prev, { sender: 'ai', text: res.reply }])
+    } catch (err: unknown) {
+      console.warn('Backend AI chat fallback:', err)
       let reply = ''
       const q = query.toLowerCase()
 
       if (q.includes('why') && (q.includes('recommend') || q.includes('dairy'))) {
-        reply = `We recommended ${activeRecommendation.title} because your village (${onboarding.village || 'Hosahalli'}) has high demand from 3,240 nearby households, suitable land/water access, and high eligibility for 90% loan coverage under PMEGP & Term Loan.`
+        reply = `We recommended ${activeRecommendation.title} because your village (${onboarding.village || 'Hosahalli'}) has high demand from nearby households, suitable land/water access, and high eligibility for 90% loan coverage under government schemes.`
       } else if (q.includes('3 lakh') || q.includes('3l')) {
-        reply = `With ₹3 Lakh starting margin, you can unlock up to ₹30 Lakh in total project cost! This enables larger cattle herds, automated milking machines, and a bulk milk cooling unit with ~₹45,000 monthly profit.`
+        reply = `With ₹3 Lakh starting margin, you can unlock up to ₹30 Lakh in total project cost! This enables larger setup capacity with ~₹45,000 monthly profit.`
       } else if (q.includes('document')) {
-        reply = `To apply for loan sanction, you need: 1) Aadhaar Card, 2) Address Proof (Ration Card), 3) 6-Month Bank Statement, 4) RuralEdge Business Viability Report, and 5) Land/Lease NOC.`
+        reply = `To apply for loan sanction, you need: 1) Aadhaar Card, 2) Address Proof, 3) 6-Month Bank Statement, 4) RuralEdge Business Viability Report, and 5) Land/Premises Proof.`
       } else if (q.includes('scheme') || q.includes('best financing')) {
-        reply = `For your profile, PMEGP (Prime Minister Employment Generation Programme) offers up to 35% margin money subsidy in rural areas. Alternatively, the RuralEdge Term Loan gives you a 6-month moratorium at 8% p.a. interest!`
+        reply = `For your profile, PMEGP offers up to 35% margin money subsidy in rural areas. Alternatively, the RuralEdge Term Loan gives you a 6-month moratorium at 8% p.a. interest!`
       } else if (q.includes('emi')) {
         reply = `Based on your selected loan of ${formatCompactINR(finance.loan)}, your estimated monthly EMI is ${formatINR(finance.emi)} with a ${finance.scheme.moratoriumMonths}-month grace period.`
       } else {
@@ -60,7 +85,9 @@ export function AiAssistantDrawer() {
       }
 
       setMessages((prev) => [...prev, { sender: 'ai', text: reply }])
-    }, 400)
+    } finally {
+      setIsTyping(false)
+    }
   }
 
   return (

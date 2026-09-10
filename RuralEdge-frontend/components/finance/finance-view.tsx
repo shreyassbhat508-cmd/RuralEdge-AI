@@ -1,11 +1,9 @@
 'use client'
 
-import Link from 'next/link'
-import { AlertTriangle, CheckCircle2, IndianRupee, Info, Calculator, ShieldCheck, Sparkles, Clock, ArrowRight } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, IndianRupee, Info, Calculator, Clock, ArrowRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useBusiness } from '@/components/business-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PlainTip } from '@/components/plain-tip'
 import { RepaymentChart } from '@/components/charts/repayment-chart'
 import {
   SCHEMES,
@@ -17,7 +15,7 @@ import {
 import { cn } from '@/lib/utils'
 
 export function FinanceView() {
-  const { profile, updateProfile, onboarding } = useBusiness()
+  const { profile, updateProfile, onboarding, businessAnalysis } = useBusiness()
   const [mode, setMode] = useState<'monthly' | 'quarterly'>('quarterly')
   
   const [moratoriumSelection, setMoratoriumSelection] = useState<string>('default')
@@ -52,6 +50,18 @@ export function FinanceView() {
   const finalRepaymentDate = timelineDate(plan.scheme.tenureYears * 12)
   const todayDate = timelineDate(0)
 
+  // Primary authoritative values from backend when available
+  const displayProjectCost = businessAnalysis?.finance?.project_cost ?? plan.projectCost
+  const displayMargin = businessAnalysis?.finance?.own_contribution ?? plan.margin
+  const displayLoan = businessAnalysis?.finance?.loan_amount ?? plan.loan
+  const displayEmi = businessAnalysis?.finance?.emi ?? plan.emi
+  const displayTenureYears = businessAnalysis?.finance?.payback_months
+    ? Math.round(businessAnalysis.finance.payback_months / 12)
+    : plan.scheme.tenureYears
+
+  const calculationNote = businessAnalysis?.finance?.calculation_note ||
+    "Estimated calculation for planning purposes. Actual loan terms, interest calculation, EMI, subsidy, moratorium and repayment schedule depend on the applicable government scheme and lending institution."
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Top Section Header */}
@@ -64,7 +74,7 @@ export function FinanceView() {
           Your financing plan
         </h1>
         <p className="mt-1 text-base text-muted-foreground">
-          Tailored credit & repayment roadmap for your business project in {onboarding.village || 'Hosahalli'}.
+          Authoritative credit & repayment calculations generated for your business in {onboarding.village || 'Hosahalli'}.
         </p>
       </div>
 
@@ -75,9 +85,9 @@ export function FinanceView() {
             PROJECT COST
           </p>
           <p className="mt-2 font-display text-2xl sm:text-3xl font-black text-foreground">
-            {formatINR(plan.projectCost)}
+            {formatINR(displayProjectCost)}
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">Total required capital</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Total capital requirement</p>
         </div>
 
         <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-md p-5 shadow-soft">
@@ -85,9 +95,9 @@ export function FinanceView() {
             YOUR CONTRIBUTION
           </p>
           <p className="mt-2 font-display text-2xl sm:text-3xl font-black text-primary">
-            {formatINR(plan.margin)}
+            {formatINR(displayMargin)}
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">10% margin money</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Own equity margin</p>
         </div>
 
         <div className="relative rounded-2xl border border-primary/40 bg-card/95 backdrop-blur-md p-5 shadow-soft overflow-hidden">
@@ -97,9 +107,9 @@ export function FinanceView() {
               POTENTIAL LOAN
             </p>
             <p className="mt-2 font-display text-2xl sm:text-3xl font-black text-primary">
-              {formatINR(plan.loan)}
+              {formatINR(displayLoan)}
             </p>
-            <p className="mt-1 text-[11px] text-primary/80 font-medium">90% scheme coverage</p>
+            <p className="mt-1 text-[11px] text-primary/80 font-medium">Scheme loan principal</p>
           </div>
         </div>
 
@@ -108,11 +118,11 @@ export function FinanceView() {
             ESTIMATED EMI
           </p>
           <p className="mt-2 font-display text-2xl sm:text-3xl font-black text-foreground">
-            {formatINR(plan.emi)}
+            {formatINR(displayEmi)}
             <span className="text-xs font-normal text-muted-foreground">/mo</span>
           </p>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            {plan.appliedMoratoriumMonths > 0 ? 'After moratorium' : 'From month 1'}
+            Monthly reducing payment
           </p>
         </div>
 
@@ -121,7 +131,7 @@ export function FinanceView() {
             TENURE
           </p>
           <p className="mt-2 font-display text-2xl sm:text-3xl font-black text-foreground">
-            {plan.scheme.tenureYears} Years
+            {displayTenureYears} Years
           </p>
           <p className="mt-1 text-[11px] text-muted-foreground">
             {plan.appliedMoratoriumMonths}m grace period
@@ -157,7 +167,7 @@ export function FinanceView() {
                 />
               </div>
 
-              {/* Interactive Loan Slider: ₹50K to ₹50L */}
+              {/* Interactive Loan Slider */}
               <div className="mt-6">
                 <div className="flex justify-between text-xs font-bold text-muted-foreground mb-2">
                   <span>₹25,000</span>
@@ -294,9 +304,11 @@ export function FinanceView() {
                 </div>
               </div>
 
-              <p className="mt-2 text-[10px] text-muted-foreground italic leading-tight">
-                * Moratorium periods and interest treatment vary by loan scheme and lender. Verify the actual terms before applying.
-              </p>
+              <div className="rounded-2xl bg-muted/40 border border-border p-3">
+                <p className="text-[11px] text-muted-foreground italic leading-tight">
+                  {calculationNote}
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -437,7 +449,6 @@ export function FinanceView() {
 function Output({
   label,
   value,
-  tip,
   highlight,
 }: {
   label: string
@@ -448,64 +459,47 @@ function Output({
   return (
     <div
       className={cn(
-        'relative rounded-2xl border p-4 bg-card/95 backdrop-blur-md overflow-hidden',
-        highlight ? 'border-primary/30' : 'border-border'
+        'rounded-2xl border border-border p-3.5',
+        highlight ? 'bg-primary/10 border-primary/30' : 'bg-background',
       )}
     >
-      {highlight && <div className="absolute inset-0 bg-primary/10 pointer-events-none" />}
-      <div className="relative z-10">
-        <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground uppercase">
-          {label}
-          <PlainTip text={tip} />
-        </div>
-        <p
-          className={cn(
-            'mt-1 font-display text-xl font-extrabold',
-            highlight ? 'text-primary' : 'text-foreground',
-          )}
-        >
-          {value}
-        </p>
-      </div>
+      <span className="text-[11px] font-bold text-muted-foreground uppercase block">{label}</span>
+      <span className={cn('text-lg font-black block mt-0.5', highlight ? 'text-primary' : 'text-foreground')}>
+        {value}
+      </span>
     </div>
   )
 }
 
 function SchemeRow({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between border-b border-border/50 pb-1.5">
       <span className="text-muted-foreground">{k}</span>
-      <span className="font-bold text-foreground">{v}</span>
+      <span className="text-foreground">{v}</span>
     </div>
   )
 }
 
 function Note({
+  children,
   tone,
   icon: Icon,
-  children,
 }: {
-  tone: 'success' | 'warning'
-  icon: React.ElementType
   children: React.ReactNode
+  tone: 'warning' | 'success'
+  icon: React.ElementType
 }) {
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-2xl border p-4 text-xs font-medium',
-        tone === 'success'
-          ? 'border-success/30 bg-success/10 text-foreground'
-          : 'border-warning/30 bg-warning/10 text-foreground',
+        'flex items-start gap-3 rounded-2xl border p-4 text-xs font-semibold',
+        tone === 'warning'
+          ? 'border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300'
+          : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300',
       )}
     >
-      <Icon
-        className={cn(
-          'mt-0.5 size-4 shrink-0',
-          tone === 'success' ? 'text-success' : 'text-warning',
-        )}
-      />
-      <p className="leading-relaxed">{children}</p>
+      <Icon className="size-4 shrink-0 mt-0.5" />
+      <span>{children}</span>
     </div>
   )
 }
-

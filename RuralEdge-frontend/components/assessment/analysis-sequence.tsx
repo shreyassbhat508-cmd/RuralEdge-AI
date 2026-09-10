@@ -9,39 +9,71 @@ import {
   Landmark,
   Calculator,
   Loader2,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GramMark } from '@/components/gram-logo'
 import { useBusiness } from '@/components/business-context'
 import { cn } from '@/lib/utils'
 
 const STAGES = [
-  { icon: MapPin, label: 'Understanding your location' },
-  { icon: TrendingUp, label: 'Analyzing local demand' },
-  { icon: ShieldCheck, label: 'Checking business viability' },
-  { icon: Landmark, label: 'Matching government schemes' },
-  { icon: Calculator, label: 'Calculating financing options' },
+  { icon: MapPin, label: 'Analyzing location' },
+  { icon: TrendingUp, label: 'Checking local competition' },
+  { icon: ShieldCheck, label: 'Calculating financial feasibility' },
+  { icon: Landmark, label: 'Matching schemes' },
+  { icon: Calculator, label: 'Preparing recommendation' },
 ]
 
 export function AnalysisSequence({ onDone }: { onDone: () => void }) {
-  const { onboarding } = useBusiness()
+  const { onboarding, runAnalysis, analysisError } = useBusiness()
   const [active, setActive] = useState(0)
-  const [percent, setPercent] = useState(12)
+  const [percent, setPercent] = useState(15)
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
+  const hasTriggeredRef = useRef(false)
+
+  const executeAnalysis = async () => {
+    setLocalError(null)
+    setActive(0)
+    setPercent(20)
+    setIsCompleted(false)
+
+    // Simulate animated UI stages while request is in-flight
+    const interval = setInterval(() => {
+      setActive((prev) => {
+        if (prev < STAGES.length - 2) {
+          const next = prev + 1
+          setPercent(Math.round(((next + 1) / STAGES.length) * 85))
+          return next
+        }
+        return prev
+      })
+    }, 600)
+
+    try {
+      await runAnalysis()
+      clearInterval(interval)
+      setActive(STAGES.length)
+      setPercent(100)
+      setIsCompleted(true)
+      setTimeout(onDone, 700)
+    } catch (err: unknown) {
+      clearInterval(interval)
+      const msg =
+        err instanceof Error
+          ? err.message
+          : 'Unable to complete business analysis. Please check your backend connection.'
+      setLocalError(msg)
+    }
+  }
 
   useEffect(() => {
-    if (active >= STAGES.length) {
-      setPercent(100)
-      const t = setTimeout(onDone, 600)
-      return () => clearTimeout(t)
+    if (!hasTriggeredRef.current) {
+      hasTriggeredRef.current = true
+      executeAnalysis()
     }
-
-    setPercent(Math.min(96, Math.round(((active + 1) / STAGES.length) * 100)))
-
-    const t = setTimeout(() => {
-      setActive((a) => a + 1)
-    }, 600)
-    return () => clearTimeout(t)
-  }, [active, onDone])
+  }, [])
 
   return (
     <div className="mx-auto flex min-h-[75vh] w-full max-w-xl flex-col items-center justify-center px-4 py-10 text-center">
@@ -60,7 +92,7 @@ export function AnalysisSequence({ onDone }: { onDone: () => void }) {
         Analyzing your opportunity
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        Evaluating local market density in {onboarding.village || 'your area'}, {onboarding.district || 'district'}...
+        Evaluating market intelligence in {onboarding.village || 'your locality'}, {onboarding.district || 'district'}, {onboarding.state || 'state'}...
       </p>
 
       {/* Progress percentage bar */}
@@ -72,17 +104,51 @@ export function AnalysisSequence({ onDone }: { onDone: () => void }) {
         <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
           <motion.div
             className="h-full bg-gradient-to-r from-primary to-primary-hover"
-            initial={{ width: '12%' }}
+            initial={{ width: '15%' }}
             animate={{ width: `${percent}%` }}
             transition={{ duration: 0.3 }}
           />
         </div>
       </div>
 
+      {/* Error Card */}
+      {(localError || analysisError) && (
+        <div className="mt-6 w-full rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-left">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="size-5 shrink-0 text-destructive mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-destructive">
+                Backend Connection Error
+              </h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {localError || analysisError}
+              </p>
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={executeAnalysis}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-destructive px-4 py-1.5 text-xs font-bold text-white shadow-soft hover:bg-destructive/90"
+                >
+                  <RefreshCw className="size-3.5" />
+                  Retry Analysis
+                </button>
+                <button
+                  type="button"
+                  onClick={onDone}
+                  className="rounded-full border border-border bg-card px-4 py-1.5 text-xs font-bold text-foreground hover:bg-muted"
+                >
+                  Continue to Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ul className="mt-8 flex w-full flex-col gap-3">
         {STAGES.map((s, i) => {
-          const done = i < active
-          const current = i === active
+          const done = i < active || isCompleted
+          const current = i === active && !isCompleted && !localError && !analysisError
           const Icon = s.icon
           return (
             <motion.li
@@ -124,4 +190,3 @@ export function AnalysisSequence({ onDone }: { onDone: () => void }) {
     </div>
   )
 }
-

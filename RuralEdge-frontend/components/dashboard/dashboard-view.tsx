@@ -3,37 +3,21 @@
 import Link from 'next/link'
 import {
   ArrowUpRight,
-  Banknote,
   Calculator,
   Landmark,
-  Lightbulb,
   MapPinned,
   MessageCircle,
   Pencil,
-  TrendingDown,
-  TrendingUp,
-  Wallet,
-  CheckCircle2,
   Clock,
   FileCheck,
-  CheckSquare,
+  CheckCircle2,
   Sparkles,
-  ChevronRight,
 } from 'lucide-react'
 import { useBusiness } from '@/components/business-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CountUp } from '@/components/count-up'
-import { PlainTip } from '@/components/plain-tip'
-import { HealthGauge } from '@/components/charts/health-gauge'
-import { RevenueTrendChart } from '@/components/charts/revenue-trend-chart'
-import { CostBreakdownChart } from '@/components/charts/cost-breakdown-chart'
-import { BreakEvenChart } from '@/components/charts/break-even-chart'
 import {
   JOURNEY_STEPS,
-  OPERATING,
-  buildBreakEven,
   formatCompactINR,
-  formatINR,
 } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
@@ -45,14 +29,20 @@ const QUICK_ACTIONS = [
 ]
 
 export function DashboardView() {
-  const { profile, finance, documents, toggleDocument, activeRecommendation, onboarding } = useBusiness()
-  const breakEven = buildBreakEven(
-    OPERATING.initialInvestment,
-    OPERATING.monthlyRevenue,
-    OPERATING.monthlyCost,
-  )
+  const { profile, finance, documents, toggleDocument, activeRecommendation, onboarding, businessAnalysis } = useBusiness()
 
   const rec = activeRecommendation
+
+  // Real backend metrics when available
+  const matchScore = businessAnalysis?.opportunity?.score ?? rec.matchScore
+  const projectCost = businessAnalysis?.finance?.project_cost ?? finance.projectCost ?? rec.investmentAmount
+  const ownContribution = businessAnalysis?.finance?.own_contribution ?? finance.margin
+  const loanAmount = businessAnalysis?.finance?.loan_amount ?? finance.loan ?? rec.fundingAmount
+
+  const demandScore = businessAnalysis?.opportunity?.components?.market ?? 92
+  const locationScore = businessAnalysis?.opportunity?.components?.location ?? 91
+  const financialScore = businessAnalysis?.opportunity?.components?.financial ?? 88
+  const competitionScore = businessAnalysis?.opportunity?.components?.competition ?? 71
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -99,8 +89,8 @@ export function DashboardView() {
 
           <div className="flex items-center gap-2 rounded-2xl bg-primary/10 border border-primary/30 px-4 py-2">
             <Sparkles className="size-5 text-primary animate-pulse" />
-            <span className="text-2xl font-black text-primary">{rec.matchScore}%</span>
-            <span className="text-xs font-bold text-primary uppercase">Viability Index</span>
+            <span className="text-2xl font-black text-primary">{matchScore}%</span>
+            <span className="text-xs font-bold text-primary uppercase">Feasibility Score</span>
           </div>
         </div>
 
@@ -109,21 +99,21 @@ export function DashboardView() {
           <div className="rounded-2xl border border-border/80 bg-background p-4">
             <p className="text-xs font-bold uppercase text-muted-foreground">Project Cost</p>
             <p className="mt-1.5 text-2xl font-black text-foreground">
-              {formatCompactINR(finance.projectCost || rec.investmentAmount)}
+              {formatCompactINR(projectCost)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-border/80 bg-background p-4">
             <p className="text-xs font-bold uppercase text-muted-foreground">Your Contribution</p>
             <p className="mt-1.5 text-2xl font-black text-primary">
-              {formatCompactINR(finance.margin)}
+              {formatCompactINR(ownContribution)}
             </p>
           </div>
 
           <div className="col-span-2 lg:col-span-1 rounded-2xl border border-primary/30 bg-primary/10 p-4">
             <p className="text-xs font-bold uppercase text-primary">Potential Financing</p>
             <p className="mt-1.5 text-2xl font-black text-primary">
-              {formatCompactINR(finance.loan || rec.fundingAmount)}
+              {formatCompactINR(loanAmount)}
             </p>
           </div>
         </div>
@@ -132,17 +122,17 @@ export function DashboardView() {
       {/* Business Health Radar Metrics */}
       <div className="mt-8">
         <h3 className="font-display text-xl font-extrabold text-foreground">
-          Business Health Scorecard
+          Business Feasibility Scorecard
         </h3>
         <p className="text-xs text-muted-foreground">
-          Real-time viability indicators derived from regional micro-data.
+          Real-time viability indicators computed by the RuralEdge backend engine.
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <HealthMetric title="DEMAND" value={92} label="High local demand" color="bg-primary" />
-          <HealthMetric title="RESOURCES" value={91} label="Suitable land & water" color="bg-charcoal" />
-          <HealthMetric title="FUNDING" value={88} label="Eligible for PMEGP" color="bg-primary" />
-          <HealthMetric title="COMPETITION" value={71} label="Moderate competition" color="bg-muted" />
+          <HealthMetric title="DEMAND" value={demandScore} label="Market Demand" color="bg-primary" />
+          <HealthMetric title="LOCATION" value={locationScore} label="Location Readiness" color="bg-charcoal" />
+          <HealthMetric title="FINANCIAL" value={financialScore} label="Financial Viability" color="bg-primary" />
+          <HealthMetric title="COMPETITION" value={competitionScore} label="Competition Score" color="bg-muted" />
         </div>
       </div>
 
@@ -267,7 +257,6 @@ export function DashboardView() {
 function HealthMetric({
   title,
   value,
-  label,
   color,
 }: {
   title: string
@@ -287,4 +276,3 @@ function HealthMetric({
     </div>
   )
 }
-

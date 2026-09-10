@@ -34,6 +34,7 @@ import {
 } from '@/lib/chatbot-engine'
 import { LANGUAGES } from '@/lib/data'
 import { cn } from '@/lib/utils'
+import { chatWithAI } from '@/lib/api'
 
 interface ChatMessage {
   id: string
@@ -44,7 +45,7 @@ interface ChatMessage {
 }
 
 export function AdvisorView() {
-  const { profile } = useBusiness()
+  const { profile, onboarding } = useBusiness()
   const { theme, toggleTheme } = useTheme()
 
   const [input, setInput] = useState('')
@@ -74,7 +75,7 @@ export function AdvisorView() {
     }
   }, [messages, isTyping])
 
-  const handleSend = (queryText?: string) => {
+  const handleSend = async (queryText?: string) => {
     const textToSend = (queryText || input).trim()
     if (!textToSend) return
 
@@ -91,8 +92,41 @@ export function AdvisorView() {
     if (!queryText) setInput('')
     setIsTyping(true)
 
-    // Simulate real-time response generation
-    setTimeout(() => {
+    try {
+      const languageMap: Record<string, string> = {
+        en: 'English',
+        hi: 'Hindi',
+        kn: 'Kannada',
+        ta: 'Tamil',
+        te: 'Telugu',
+        mr: 'Marathi',
+        bn: 'Bengali',
+      }
+
+      const aiResponse = await chatWithAI({
+        message: textToSend,
+        user_context: {
+          state: onboarding.state || profile.state,
+          district: onboarding.district || profile.district,
+          occupation: profile.typeLabel,
+        },
+        language: languageMap[selectedLanguage] || 'English',
+      })
+
+      const botMsg: ChatMessage = {
+        id: `b-${Date.now()}`,
+        sender: 'bot',
+        response: {
+          explanation: aiResponse.reply,
+          headings: aiResponse.sources?.length ? ['Official References'] : undefined,
+          bulletPoints: aiResponse.sources?.length ? aiResponse.sources : undefined,
+        },
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+
+      setMessages((prev) => [...prev, botMsg])
+    } catch (err: unknown) {
+      console.warn('Backend AI service call fallback:', err)
       const botResponse = processChatbotQuery(textToSend)
       const botMsg: ChatMessage = {
         id: `b-${Date.now()}`,
@@ -102,8 +136,9 @@ export function AdvisorView() {
       }
 
       setMessages((prev) => [...prev, botMsg])
+    } finally {
       setIsTyping(false)
-    }, 550)
+    }
   }
 
   // Voice Input Speech Recognition Handler
