@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, User, Sun, Moon } from 'lucide-react'
-import { useState } from 'react'
+import { Menu, X, User, Sun, Moon, LogOut, Settings, Briefcase, LogIn, UserPlus } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
 import { GramLogo } from '@/components/gram-logo'
 import { LanguageSelector } from '@/components/language-selector'
 import { useTheme } from '@/components/theme-provider'
+import { useAuth } from '@/components/auth-context'
 import { cn } from '@/lib/utils'
 
 export const NAV_LINKS = [
@@ -19,7 +20,30 @@ export const NAV_LINKS = [
 export function SiteNavbar() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
   const { theme, toggleTheme } = useTheme()
+  const { user, signOut } = useAuth()
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false)
+      }
+    }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setProfileOpen(false)
+    }
+
+    if (profileOpen) {
+      document.addEventListener('mousedown', handleOutsideClick)
+      document.addEventListener('keydown', handleEscape)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [profileOpen])
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -58,7 +82,7 @@ export function SiteNavbar() {
             className="grid size-10 place-items-center rounded-full border border-border bg-card text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95"
           >
             {theme === 'dark' ? (
-              <Sun className="size-4.5 text-sand animate-in fade-in zoom-in spin-in-90 duration-300" />
+              <Sun className="size-4.5 text-gray-200 animate-in fade-in zoom-in spin-in-90 duration-300" />
             ) : (
               <Moon className="size-4.5 text-charcoal animate-in fade-in zoom-in spin-in-90 duration-300" />
             )}
@@ -66,13 +90,87 @@ export function SiteNavbar() {
 
           <LanguageSelector />
 
-          <button
-            type="button"
-            aria-label="Profile"
-            className="hidden size-10 place-items-center rounded-full border border-border bg-card text-charcoal dark:text-foreground transition-colors hover:bg-muted sm:grid"
-          >
-            <User className="size-4.5" />
-          </button>
+          <div className="relative hidden sm:block" ref={profileRef}>
+            <button
+              type="button"
+              aria-label="Profile"
+              aria-expanded={profileOpen}
+              onClick={() => setProfileOpen((v) => !v)}
+              className={cn(
+                "grid size-10 place-items-center rounded-full border border-border bg-card text-charcoal dark:text-foreground transition-colors hover:bg-muted",
+                profileOpen && "bg-muted"
+              )}
+            >
+              <User className="size-4.5" />
+            </button>
+
+            {profileOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card p-1.5 shadow-lg animate-in fade-in zoom-in-95 duration-200 z-50">
+                <div className="px-2 py-1.5 text-sm font-medium border-b border-border mb-1 text-foreground">
+                  My Account
+                </div>
+                {user ? (
+                  <>
+                    <Link
+                      href="/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                    >
+                      <User className="size-4" />
+                      Profile
+                    </Link>
+                    <Link
+                      href="/market"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                    >
+                      <Briefcase className="size-4" />
+                      My Business Profile
+                    </Link>
+                    <Link
+                      href="/settings"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                    >
+                      <Settings className="size-4" />
+                      Settings
+                    </Link>
+                    <div className="my-1 h-px bg-border" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        signOut()
+                        setProfileOpen(false)
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/50"
+                    >
+                      <LogOut className="size-4" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/signin"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                    >
+                      <LogIn className="size-4" />
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/signup"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                    >
+                      <UserPlus className="size-4" />
+                      Sign Up
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
           <Link
             href="/advisor"
@@ -120,7 +218,7 @@ export function SiteNavbar() {
               >
                 {theme === 'dark' ? (
                   <>
-                    <Sun className="size-3.5 text-sand" /> Light Mode
+                    <Sun className="size-3.5 text-gray-200" /> Light Mode
                   </>
                 ) : (
                   <>

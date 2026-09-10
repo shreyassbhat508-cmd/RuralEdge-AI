@@ -4,6 +4,7 @@ import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { BusinessProvider } from '@/components/business-context'
 import { ThemeProvider } from '@/components/theme-provider'
+import { AuthProvider } from '@/components/auth-context'
 import { GlobalBackground } from '@/components/global-background'
 import { IntroAnimation } from '@/components/intro-animation'
 
@@ -47,7 +48,9 @@ export default function RootLayout({
         <GlobalBackground />
         <IntroAnimation />
         <ThemeProvider>
-          <BusinessProvider>{children}</BusinessProvider>
+          <AuthProvider>
+            <BusinessProvider>{children}</BusinessProvider>
+          </AuthProvider>
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
