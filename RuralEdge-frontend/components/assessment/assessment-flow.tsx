@@ -456,7 +456,7 @@ function StepHeader({
   children,
 }: {
   badge: string
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
   title: string
   subtitle: string
   children: React.ReactNode

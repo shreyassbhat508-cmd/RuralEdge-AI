@@ -31,8 +31,8 @@ export function RepaymentChart({ rows }: { rows: RepaymentRow[] }) {
           tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
         />
         <Tooltip
-          formatter={(v: number, n) => [
-            formatCompactINR(v),
+          formatter={(v: any, n: any) => [
+            formatCompactINR(Number(v) || 0),
             n === 'principal' ? 'Principal' : 'Interest',
           ]}
           contentStyle={{

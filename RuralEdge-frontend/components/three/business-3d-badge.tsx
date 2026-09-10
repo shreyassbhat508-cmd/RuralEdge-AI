@@ -11,7 +11,7 @@ interface Business3DBadgeProps {
 
 const BADGE_CONFIG: Record<
   BusinessType,
-  { icon: React.ElementType; label: string; color: string; bg: string; shadow: string }
+  { icon: React.ComponentType<{ className?: string }>; label: string; color: string; bg: string; shadow: string }
 > = {
   dairy: {
     icon: Milk,

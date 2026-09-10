@@ -487,7 +487,7 @@ function Note({
 }: {
   children: React.ReactNode
   tone: 'warning' | 'success'
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
 }) {
   return (
     <div

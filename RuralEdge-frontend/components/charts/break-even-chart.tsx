@@ -39,8 +39,8 @@ export function BreakEvenChart({
           tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
         />
         <Tooltip
-          formatter={(v: number, n) => [
-            formatCompactINR(v),
+          formatter={(v: any, n: any) => [
+            formatCompactINR(Number(v) || 0),
             n === 'cumulative' ? 'Cumulative profit' : 'Investment',
           ]}
           labelFormatter={(l) => `Month ${l}`}
