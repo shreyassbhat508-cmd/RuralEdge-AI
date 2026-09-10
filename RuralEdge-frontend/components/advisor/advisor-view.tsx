@@ -34,6 +34,7 @@ import {
 } from '@/lib/chatbot-engine'
 import { LANGUAGES } from '@/lib/data'
 import { cn } from '@/lib/utils'
+import { sendAiMessage } from '@/lib/api/ai'
 
 interface ChatMessage {
   id: string
@@ -74,7 +75,7 @@ export function AdvisorView() {
     }
   }, [messages, isTyping])
 
-  const handleSend = (queryText?: string) => {
+  const handleSend = async (queryText?: string) => {
     const textToSend = (queryText || input).trim()
     if (!textToSend) return
 
@@ -91,9 +92,33 @@ export function AdvisorView() {
     if (!queryText) setInput('')
     setIsTyping(true)
 
-    // Simulate real-time response generation
-    setTimeout(() => {
+    try {
+      const res = await sendAiMessage({
+        message: textToSend,
+        user_context: {
+          state: profile.state || 'Karnataka',
+          district: profile.district || 'Ramanagara',
+          age: profile.age,
+          gender: profile.gender,
+        },
+        language: selectedLanguage === 'hi' ? 'Hindi' : 'English',
+      })
+
+      const botMsg: ChatMessage = {
+        id: `b-${Date.now()}`,
+        sender: 'bot',
+        response: {
+          explanation: res.reply,
+          bulletPoints: res.sources.length > 0 ? res.sources : undefined,
+        },
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+
+      setMessages((prev) => [...prev, botMsg])
+    } catch (err: any) {
+      console.warn('FastAPI AI failed, calling local engine fallback:', err)
       const botResponse = processChatbotQuery(textToSend)
+      botResponse.isUnverified = true
       const botMsg: ChatMessage = {
         id: `b-${Date.now()}`,
         sender: 'bot',
@@ -102,8 +127,9 @@ export function AdvisorView() {
       }
 
       setMessages((prev) => [...prev, botMsg])
+    } finally {
       setIsTyping(false)
-    }, 550)
+    }
   }
 
   // Voice Input Speech Recognition Handler

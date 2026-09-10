@@ -14,7 +14,7 @@ import {
   Coins,
   CheckCircle2,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useBusiness } from '@/components/business-context'
 import {
   ONBOARDING_RESOURCES,
@@ -26,6 +26,8 @@ import {
 import { cn } from '@/lib/utils'
 import { AnalysisSequence } from '@/components/assessment/analysis-sequence'
 import { RecommendationView } from '@/components/assessment/recommendation-view'
+import { getLocations } from '@/lib/api/locations'
+import { LocationResponse } from '@/lib/api/types'
 
 const STEPS = [
   'Location',
@@ -42,6 +44,23 @@ export function AssessmentFlow() {
   const { onboarding, updateOnboarding, setHasCompletedAssessment } = useBusiness()
   const [step, setStep] = useState(0)
   const [viewState, setViewState] = useState<'onboarding' | 'analyzing' | 'recommendation'>('onboarding')
+  const [fetchedLocations, setFetchedLocations] = useState<LocationResponse[]>([])
+
+  useEffect(() => {
+    let active = true
+    getLocations({ state: onboarding.state })
+      .then((res) => {
+        if (active && res) {
+          setFetchedLocations(res)
+        }
+      })
+      .catch(() => {
+        // Fallback silently to typed text
+      })
+    return () => {
+      active = false
+    }
+  }, [onboarding.state])
 
   // Calculated finance preview
   const financePreview = useMemo(() => {

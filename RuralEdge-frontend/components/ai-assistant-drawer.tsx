@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, MessageCircle, X, Send, Bot, User } from 'lucide-react'
+import { Sparkles, MessageCircle, X, Send, Bot, User, RefreshCw } from 'lucide-react'
 import { useBusiness } from '@/components/business-context'
 import { advisorReply, formatCompactINR, formatINR } from '@/lib/data'
+import { sendAiMessage } from '@/lib/api/ai'
 
 const QUICK_QUESTIONS = [
   'Why did you recommend dairy farming?',
@@ -18,49 +19,70 @@ export function AiAssistantDrawer() {
   const [isOpen, setIsOpen] = useState(false)
   const { profile, finance, onboarding, activeRecommendation } = useBusiness()
   const [messages, setMessages] = useState<
-    { sender: 'ai' | 'user'; text: string }[]
+    { sender: 'ai' | 'user'; text: string; isError?: boolean }[]
   >([
     {
       sender: 'ai',
-      text: `Namaste ${profile.ownerName || 'Entrepreneur'}! I am RuralEdge AI, your business advisory assistant. Ask me anything about your project in ${onboarding.village || 'Hosahalli'}, credit schemes, or viability metrics!`,
+      text: `Namaste ${profile.ownerName || 'Entrepreneur'}! I am RuralEdge AI, powered by FastAPI & Gemini. Ask me anything about government schemes, financing, or your business in ${onboarding.village || 'Hosahalli'}!`,
     },
   ])
   const [input, setInput] = useState('')
+  const [isThinking, setIsThinking] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isOpen])
+  }, [messages, isOpen, isThinking])
 
-  const handleSend = (textToSend?: string) => {
-    const query = textToSend || input
-    if (!query.trim()) return
+  const handleSend = async (textToSend?: string) => {
+    const query = (textToSend || input).trim()
+    if (!query || isThinking) return
 
-    const newMessages = [...messages, { sender: 'user' as const, text: query }]
-    setMessages(newMessages)
+    setMessages((prev) => [...prev, { sender: 'user', text: query }])
     if (!textToSend) setInput('')
+    setIsThinking(true)
 
-    // Generate contextual response
-    setTimeout(() => {
-      let reply = ''
+    try {
+      const response = await sendAiMessage({
+        message: query,
+        user_context: {
+          state: onboarding.state,
+          district: onboarding.district,
+          age: profile.age,
+          gender: profile.gender,
+          occupation: onboarding.selectedInterests[0] || 'farmer',
+          annual_income: profile.annualIncome,
+        },
+        language: 'English',
+      })
+
+      setMessages((prev) => [...prev, { sender: 'ai', text: response.reply }])
+    } catch (err: any) {
+      console.warn('FastAPI AI Endpoint Error, attempting fallback:', err)
+      // Isolated Emergency Fallback
+      let fallbackReply = ''
       const q = query.toLowerCase()
-
       if (q.includes('why') && (q.includes('recommend') || q.includes('dairy'))) {
-        reply = `We recommended ${activeRecommendation.title} because your village (${onboarding.village || 'Hosahalli'}) has high demand from 3,240 nearby households, suitable land/water access, and high eligibility for 90% loan coverage under PMEGP & Term Loan.`
+        fallbackReply = `We recommended ${activeRecommendation.title} because your village (${onboarding.village || 'Hosahalli'}) has high demand, suitable land/water access, and high eligibility for loan coverage.`
       } else if (q.includes('3 lakh') || q.includes('3l')) {
-        reply = `With ₹3 Lakh starting margin, you can unlock up to ₹30 Lakh in total project cost! This enables larger cattle herds, automated milking machines, and a bulk milk cooling unit with ~₹45,000 monthly profit.`
+        fallbackReply = `With ₹3 Lakh starting margin, you can unlock up to ₹30 Lakh in total project cost!`
       } else if (q.includes('document')) {
-        reply = `To apply for loan sanction, you need: 1) Aadhaar Card, 2) Address Proof (Ration Card), 3) 6-Month Bank Statement, 4) RuralEdge Business Viability Report, and 5) Land/Lease NOC.`
-      } else if (q.includes('scheme') || q.includes('best financing')) {
-        reply = `For your profile, PMEGP (Prime Minister Employment Generation Programme) offers up to 35% margin money subsidy in rural areas. Alternatively, the RuralEdge Term Loan gives you a 6-month moratorium at 8% p.a. interest!`
-      } else if (q.includes('emi')) {
-        reply = `Based on your selected loan of ${formatCompactINR(finance.loan)}, your estimated monthly EMI is ${formatINR(finance.emi)} with a ${finance.scheme.moratoriumMonths}-month grace period.`
+        fallbackReply = `To apply for loan sanction, you need: 1) Aadhaar Card, 2) Address Proof, 3) 6-Month Bank Statement, and 4) Business Viability Report.`
       } else {
-        reply = advisorReply(query)
+        fallbackReply = advisorReply(query)
       }
-
-      setMessages((prev) => [...prev, { sender: 'ai', text: reply }])
-    }, 400)
+      
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: 'ai',
+          text: `${fallbackReply}\n\n(Note: ${err.message || 'FastAPI AI service unavailable'})`,
+          isError: false,
+        },
+      ])
+    } finally {
+      setIsThinking(false)
+    }
   }
 
   return (
@@ -99,7 +121,7 @@ export function AiAssistantDrawer() {
                       ✨ RuralEdge AI
                     </h3>
                     <p className="text-[11px] text-white/80">
-                      Context aware: {profile.ownerName} ({onboarding.village || 'Hosahalli'})
+                      FastAPI + Gemini 2.5 • {onboarding.village || 'Hosahalli'}
                     </p>
                   </div>
                 </div>
@@ -128,9 +150,11 @@ export function AiAssistantDrawer() {
                       </div>
                     )}
                     <div
-                      className={`max-w-[82%] rounded-2xl p-3.5 text-xs leading-relaxed ${
+                      className={`max-w-[82%] rounded-2xl p-3.5 text-xs leading-relaxed whitespace-pre-line ${
                         m.sender === 'user'
                           ? 'bg-primary text-white font-semibold rounded-br-none'
+                          : m.isError
+                          ? 'bg-destructive/10 border border-destructive/30 text-destructive rounded-bl-none'
                           : 'bg-background border border-border/80 text-foreground shadow-soft rounded-bl-none'
                       }`}
                     >
@@ -143,6 +167,13 @@ export function AiAssistantDrawer() {
                     )}
                   </div>
                 ))}
+
+                {isThinking && (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground p-2">
+                    <RefreshCw className="size-3.5 animate-spin text-primary" />
+                    <span>FastAPI Gemini AI is processing your query...</span>
+                  </div>
+                )}
                 <div ref={chatEndRef} />
               </div>
 
@@ -156,8 +187,9 @@ export function AiAssistantDrawer() {
                     <button
                       key={q}
                       type="button"
+                      disabled={isThinking}
                       onClick={() => handleSend(q)}
-                      className="rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-semibold text-foreground transition-all hover:bg-primary/10 hover:border-primary/40 text-left"
+                      className="rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-semibold text-foreground transition-all hover:bg-primary/10 hover:border-primary/40 text-left disabled:opacity-50"
                     >
                       {q}
                     </button>
@@ -178,11 +210,13 @@ export function AiAssistantDrawer() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask RuralEdge AI anything..."
-                    className="flex-1 rounded-full border border-input bg-background px-4 py-2.5 text-xs font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring"
+                    disabled={isThinking}
+                    className="flex-1 rounded-full border border-input bg-background px-4 py-2.5 text-xs font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                   />
                   <button
                     type="submit"
-                    className="grid size-9 place-items-center rounded-full bg-primary text-white shadow-soft transition-transform hover:scale-105 hover:bg-primary-hover"
+                    disabled={!input.trim() || isThinking}
+                    className="grid size-9 place-items-center rounded-full bg-primary text-white shadow-soft transition-transform hover:scale-105 hover:bg-primary-hover disabled:opacity-50"
                   >
                     <Send className="size-4" />
                   </button>
