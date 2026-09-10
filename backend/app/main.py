@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.routes.ai import router as ai_router
+from app.routes.business import router as business_router
 from app.routes.documents import router as documents_router
 from app.routes.eligibility_check import router as eligibility_check_router
 from app.routes.health import router as health_router
@@ -167,4 +168,5 @@ app.include_router(recommendations_router)
 app.include_router(loan_calculator_router)
 app.include_router(eligibility_check_router)
 app.include_router(ai_router)
+app.include_router(business_router)
 

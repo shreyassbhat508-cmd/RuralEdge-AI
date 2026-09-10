@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import {
   ArrowUpRight,
@@ -19,6 +20,9 @@ import {
   CheckSquare,
   Sparkles,
   ChevronRight,
+  RefreshCw,
+  AlertTriangle,
+  Info,
 } from 'lucide-react'
 import { useBusiness } from '@/components/business-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,6 +39,8 @@ import {
   formatCompactINR,
   formatINR,
 } from '@/lib/data'
+import { analyzeBusiness } from '@/lib/api/business'
+import { BusinessAnalyzeResponse, BusinessAnalyzeRequest } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
 
 const QUICK_ACTIONS = [
@@ -46,11 +52,57 @@ const QUICK_ACTIONS = [
 
 export function DashboardView() {
   const { profile, finance, documents, toggleDocument, activeRecommendation, onboarding } = useBusiness()
-  const breakEven = buildBreakEven(
-    OPERATING.initialInvestment,
-    OPERATING.monthlyRevenue,
-    OPERATING.monthlyCost,
-  )
+  
+  // API State for /api/business/analyze
+  const [analysis, setAnalysis] = useState<BusinessAnalyzeResponse | null>(null)
+  const [analysisLoading, setAnalysisLoading] = useState<boolean>(true)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
+
+  const fetchAnalysis = useCallback(async () => {
+    setAnalysisLoading(true)
+    setAnalysisError(null)
+
+    const state = onboarding.state || profile.state || 'Karnataka'
+    const district = onboarding.district || profile.district || 'Kodagu'
+    const village = onboarding.village || profile.village || 'XYZ Village'
+    const category = onboarding.selectedInterests[0] || 'Dairy'
+    const margin = onboarding.budget > 0 ? onboarding.budget / 2 : profile.margin || 100000
+    const cost = margin * 10 || 1000000
+
+    // Basic Validation
+    if (!state.trim() || !district.trim()) {
+      setAnalysisError('State and District location details are required')
+      setAnalysisLoading(false)
+      return
+    }
+
+    if (margin < 0 || cost <= 0 || margin > cost) {
+      setAnalysisError('Invalid financial margin capital or project cost values')
+      setAnalysisLoading(false)
+      return
+    }
+
+    try {
+      const reqPayload: BusinessAnalyzeRequest = {
+        location: { state, district, village },
+        business_category: category,
+        margin_capital: margin,
+        project_cost: cost,
+      }
+
+      const res = await analyzeBusiness(reqPayload)
+      setAnalysis(res)
+    } catch (err: any) {
+      console.error('Error fetching business analysis:', err)
+      setAnalysisError(err.message || 'Failed to fetch business analysis from FastAPI endpoint')
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }, [onboarding, profile])
+
+  useEffect(() => {
+    fetchAnalysis()
+  }, [fetchAnalysis])
 
   const rec = activeRecommendation
 
@@ -127,6 +179,197 @@ export function DashboardView() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* ==================================================
+          FASTAPI CORE BUSINESS ANALYSIS SECTION (POST /api/business/analyze)
+          ================================================== */}
+      <div className="mt-10 rounded-3xl border border-primary/40 bg-card/95 backdrop-blur-md p-6 sm:p-8 shadow-soft">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-4">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-extrabold text-primary">
+              <Sparkles className="size-3.5" />
+              FastAPI Core Endpoint
+            </span>
+            <h3 className="mt-2 font-display text-2xl font-extrabold text-foreground">
+              Business Analysis (`POST /api/business/analyze`)
+            </h3>
+          </div>
+
+          <button
+            type="button"
+            onClick={fetchAnalysis}
+            disabled={analysisLoading}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-bold text-foreground hover:bg-muted disabled:opacity-50"
+          >
+            <RefreshCw className={cn('size-3.5', analysisLoading && 'animate-spin')} />
+            Refresh Analysis
+          </button>
+        </div>
+
+        {analysisLoading ? (
+          <div className="py-12 flex flex-col items-center justify-center text-center">
+            <RefreshCw className="size-8 animate-spin text-primary mb-3" />
+            <p className="text-sm font-semibold text-muted-foreground">
+              Executing business analysis query on FastAPI backend...
+            </p>
+          </div>
+        ) : analysisError ? (
+          <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center">
+            <AlertTriangle className="mx-auto size-8 text-destructive mb-2" />
+            <h4 className="font-bold text-foreground text-base">Analysis Request Failed</h4>
+            <p className="mt-1 text-xs text-muted-foreground">{analysisError}</p>
+            <button
+              type="button"
+              onClick={fetchAnalysis}
+              className="mt-4 rounded-full bg-primary px-4 py-2 text-xs font-bold text-white shadow-soft"
+            >
+              Retry
+            </button>
+          </div>
+        ) : analysis ? (
+          <div className="mt-6 space-y-6">
+            {/* Top 6 Result Blocks Grid */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {/* 1. BUSINESS BLOCK */}
+              <div className="rounded-2xl border border-border bg-background p-5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                  1. BUSINESS DETAILS
+                </span>
+                <h4 className="mt-2 font-extrabold text-lg text-foreground">
+                  {analysis.business.category}
+                </h4>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {[
+                    analysis.business.location.village,
+                    analysis.business.location.district,
+                    analysis.business.location.state,
+                  ]
+                    .filter(Boolean)
+                    .join(', ')}
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-2 text-xs border-t border-border/60 pt-3">
+                  <div>
+                    <span className="text-muted-foreground block">Cost:</span>
+                    <span className="font-bold text-foreground">{formatINR(analysis.business.project_cost)}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Margin:</span>
+                    <span className="font-bold text-primary">{formatINR(analysis.business.margin_capital)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. MARKET BLOCK */}
+              <div className="rounded-2xl border border-border bg-background p-5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                  2. MARKET INTELLIGENCE
+                </span>
+                {analysis.market.status === 'insufficient_data' ? (
+                  <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+                    <Info className="size-4 shrink-0 mb-1 text-amber-600" />
+                    <span>Market intelligence data is not available yet.</span>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-foreground">{analysis.market.message}</p>
+                )}
+              </div>
+
+              {/* 3. OPPORTUNITY BLOCK */}
+              <div className="rounded-2xl border border-border bg-background p-5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                  3. OPPORTUNITY RATING
+                </span>
+                {analysis.opportunity.score === null ? (
+                  <div className="mt-3 rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground">
+                    <span className="font-bold text-foreground block mb-1">Status: {analysis.opportunity.status}</span>
+                    <p>{analysis.opportunity.message}</p>
+                  </div>
+                ) : (
+                  <div className="mt-2 text-2xl font-black text-primary">
+                    {analysis.opportunity.score}% Score
+                  </div>
+                )}
+              </div>
+
+              {/* 4. FINANCE BLOCK */}
+              <div className="rounded-2xl border border-border bg-background p-5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                  4. FINANCIAL STRUCTURE
+                </span>
+                <div className="mt-3 space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Loan Amount:</span>
+                    <span className="font-bold text-primary">{formatINR(analysis.finance.loan_amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Margin Share:</span>
+                    <span className="font-bold text-foreground">{analysis.finance.margin_percentage}%</span>
+                  </div>
+                  {analysis.finance.approx_monthly_payment && (
+                    <div className="flex justify-between border-t border-border/60 pt-1.5">
+                      <span className="text-muted-foreground">Est. Monthly EMI:</span>
+                      <span className="font-extrabold text-foreground">{formatINR(analysis.finance.approx_monthly_payment)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 5. SCHEME BLOCK */}
+              <div className="rounded-2xl border border-border bg-background p-5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                  5. SCHEME MATCHING
+                </span>
+                {analysis.scheme.status === 'matched' && analysis.scheme.recommended_scheme ? (
+                  <div className="mt-2">
+                    <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-extrabold text-primary border border-primary/30">
+                      {analysis.scheme.recommended_scheme.match_score}% Match
+                    </span>
+                    <h5 className="mt-1 font-bold text-sm text-foreground line-clamp-1">
+                      {analysis.scheme.recommended_scheme.name}
+                    </h5>
+                    <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
+                      {analysis.scheme.recommended_scheme.description}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    No matching government scheme found in database.
+                  </div>
+                )}
+              </div>
+
+              {/* 6. SWOT BLOCK */}
+              <div className="rounded-2xl border border-border bg-background p-5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                  6. PRELIMINARY SWOT
+                </span>
+                <div className="mt-2 space-y-2 text-xs">
+                  {analysis.swot.strengths.length > 0 && (
+                    <div>
+                      <span className="font-bold text-success block">Strengths:</span>
+                      <ul className="list-disc list-inside text-muted-foreground">
+                        {analysis.swot.strengths.map((s, idx) => (
+                          <li key={idx}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {analysis.swot.weaknesses.length > 0 && (
+                    <div>
+                      <span className="font-bold text-amber-600 dark:text-amber-400 block">Weaknesses:</span>
+                      <ul className="list-disc list-inside text-muted-foreground">
+                        {analysis.swot.weaknesses.map((w, idx) => (
+                          <li key={idx}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Business Health Radar Metrics */}
@@ -287,4 +530,3 @@ function HealthMetric({
     </div>
   )
 }
-
