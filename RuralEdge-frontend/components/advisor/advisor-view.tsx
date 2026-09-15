@@ -145,11 +145,15 @@ export function AdvisorView() {
     }
 
     try {
-      const SpeechRecognition =
-        (window as unknown as { SpeechRecognition: new () => SpeechRecognition }).SpeechRecognition ||
-        (window as unknown as { webkitSpeechRecognition: new () => SpeechRecognition }).webkitSpeechRecognition
+      const SpeechRecognitionClass =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
-      const recognition = new SpeechRecognition()
+      if (!SpeechRecognitionClass) {
+        alert('Speech recognition is not supported in this browser. Please type your message.')
+        return
+      }
+
+      const recognition = new SpeechRecognitionClass()
       recognition.continuous = false
       recognition.interimResults = false
       recognition.lang = selectedLanguage === 'hi' ? 'hi-IN' : 'en-IN'
@@ -157,8 +161,8 @@ export function AdvisorView() {
       recognition.onstart = () => setIsListening(true)
       recognition.onend = () => setIsListening(false)
 
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const transcript = event.results[0][0].transcript
+      recognition.onresult = (event: any) => {
+        const transcript = event.results?.[0]?.[0]?.transcript
         if (transcript) {
           setInput(transcript)
         }

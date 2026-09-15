@@ -80,7 +80,7 @@ const BADGE_CONFIG: Record<
 
 export function Business3DBadge({ type, size = 'md', active = false }: Business3DBadgeProps) {
   const config = BADGE_CONFIG[type] || BADGE_CONFIG.other
-  const Icon = config.icon
+  const Icon = config.icon as React.ComponentType<any>
 
   const sizeClasses = {
     sm: 'size-10 text-xs',

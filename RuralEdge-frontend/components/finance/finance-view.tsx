@@ -91,11 +91,10 @@ export function FinanceView() {
   // Schedule generator for chart based on backend result
   const chartSchedule = (() => {
     if (!calcResult) return []
-    const points: { period: string; principal: number; interest: number }[] = []
+    const points: import('@/lib/data').RepaymentRow[] = []
     const totalMonths = calcResult.repayment_period_months
     const yearlyStep = Math.max(1, Math.floor(totalMonths / 5))
     
-    let remPrincipal = calcResult.loan_amount
     const totalInt = calcResult.total_interest
 
     for (let m = 0; m <= totalMonths; m += yearlyStep) {
@@ -103,9 +102,12 @@ export function FinanceView() {
       const pPaid = calcResult.loan_amount * progress
       const iPaid = totalInt * progress
       points.push({
-        period: `Month ${m}`,
+        period: m,
+        label: `M${m}`,
         principal: Math.round(pPaid),
         interest: Math.round(iPaid),
+        balance: Math.max(0, Math.round(calcResult.loan_amount - pPaid)),
+        isMoratorium: m <= moratoriumMonths,
       })
     }
     return points

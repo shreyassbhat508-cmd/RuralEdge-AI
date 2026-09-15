@@ -40,7 +40,7 @@ export function RevenueTrendChart() {
           tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
         />
         <Tooltip
-          formatter={(v: number, n) => [formatCompactINR(v), n as string]}
+          formatter={(v: any, n: any) => [formatCompactINR(Number(v) || 0), String(n || '')]}
           contentStyle={{
             borderRadius: 12,
             border: '1px solid var(--border)',

@@ -31,6 +31,10 @@ export interface BusinessProfile {
   margin: number
   goal: BusinessGoal
   goalLabel: string
+  age?: number
+  gender?: string
+  annualIncome?: number
+  category?: string
 }
 
 export const DEFAULT_PROFILE: BusinessProfile = {

@@ -31,7 +31,7 @@ export function CostBreakdownChart() {
             ))}
           </Pie>
           <Tooltip
-            formatter={(v: number, n) => [formatINR(v), n as string]}
+            formatter={(v: any, n: any) => [formatINR(Number(v) || 0), String(n || '')]}
             contentStyle={{
               borderRadius: 12,
               border: '1px solid var(--border)',

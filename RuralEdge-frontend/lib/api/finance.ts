@@ -18,7 +18,7 @@ export async function calculateLoan(
 export async function calculateSchemeLoan(
   schemeId: string,
   request: SchemeLoanCalculatorRequest
-): Promise<SchemeLoanLoanCalculatorResponse> {
+): Promise<SchemeLoanCalculatorResponse> {
   return apiClient<SchemeLoanCalculatorResponse>(`/api/loan-calculator/scheme/${schemeId}`, {
     method: 'POST',
     body: JSON.stringify(request),

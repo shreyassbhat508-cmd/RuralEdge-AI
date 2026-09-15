@@ -349,7 +349,7 @@ export function DashboardView() {
                     <div>
                       <span className="font-bold text-success block">Strengths:</span>
                       <ul className="list-disc list-inside text-muted-foreground">
-                        {analysis.swot.strengths.map((s, idx) => (
+                        {analysis.swot.strengths.map((s: string, idx: number) => (
                           <li key={idx}>{s}</li>
                         ))}
                       </ul>
@@ -359,7 +359,7 @@ export function DashboardView() {
                     <div>
                       <span className="font-bold text-amber-600 dark:text-amber-400 block">Weaknesses:</span>
                       <ul className="list-disc list-inside text-muted-foreground">
-                        {analysis.swot.weaknesses.map((w, idx) => (
+                        {analysis.swot.weaknesses.map((w: string, idx: number) => (
                           <li key={idx}>{w}</li>
                         ))}
                       </ul>
