@@ -378,7 +378,7 @@ export function MarketView() {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-primary uppercase">Top Scheme Match</span>
-                  <h3 className="text-2xl font-extrabold text-foreground">PMEGP Subsidy & Term Loan</h3>
+                  <h3 className="text-2xl font-extrabold text-foreground">PMEGP & MUDRA Government Schemes</h3>
                 </div>
                 <Link
                   href="/schemes"

@@ -88,6 +88,14 @@ export function DashboardView() {
         business_category: category,
         margin_capital: margin,
         project_cost: cost,
+        age: profile.age,
+        gender: profile.gender,
+        annual_income: profile.annualIncome,
+        caste_category: profile.category,
+        education: profile.education,
+        disability: profile.disability,
+        land_owned: profile.landOwned !== undefined ? profile.landOwned : (onboarding.selectedResources?.includes('land') ?? undefined),
+        business_exists: profile.businessExists,
       }
 
       const res = await analyzeBusiness(reqPayload)
@@ -265,7 +273,19 @@ export function DashboardView() {
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
                   2. MARKET INTELLIGENCE
                 </span>
-                {analysis.market.status === 'insufficient_data' ? (
+                {analysis.market.status === 'estimated' ? (
+                  <div className="mt-2">
+                    <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-extrabold text-primary border border-primary/30">
+                      Estimated Regional Benchmark Data
+                    </span>
+                    <h5 className="mt-1.5 font-bold text-sm text-foreground">
+                      {analysis.market.demand_label || 'Regional Market Benchmark'}
+                    </h5>
+                    <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
+                      {analysis.market.market_summary || analysis.market.message}
+                    </p>
+                  </div>
+                ) : analysis.market.status === 'insufficient_data' ? (
                   <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
                     <Info className="size-4 shrink-0 mb-1 text-amber-600" />
                     <span>Market intelligence data is not available yet.</span>
@@ -286,8 +306,13 @@ export function DashboardView() {
                     <p>{analysis.opportunity.message}</p>
                   </div>
                 ) : (
-                  <div className="mt-2 text-2xl font-black text-primary">
-                    {analysis.opportunity.score}% Score
+                  <div className="mt-2">
+                    <div className="text-2xl font-black text-primary">
+                      {analysis.opportunity.score}% Score
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
+                      {analysis.opportunity.message}
+                    </p>
                   </div>
                 )}
               </div>
@@ -382,10 +407,25 @@ export function DashboardView() {
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <HealthMetric title="DEMAND" value={92} label="High local demand" color="bg-primary" />
+          <HealthMetric
+            title="DEMAND"
+            value={analysis?.market?.demand_score || 92}
+            label={analysis?.market?.demand_label || "High local demand"}
+            color="bg-primary"
+          />
           <HealthMetric title="RESOURCES" value={91} label="Suitable land & water" color="bg-charcoal" />
-          <HealthMetric title="FUNDING" value={88} label="Eligible for PMEGP" color="bg-primary" />
-          <HealthMetric title="COMPETITION" value={71} label="Moderate competition" color="bg-muted" />
+          <HealthMetric
+            title="FUNDING"
+            value={analysis?.scheme?.recommended_scheme?.match_score || 88}
+            label={analysis?.scheme?.recommended_scheme?.short_name ? `Eligible for ${analysis.scheme.recommended_scheme.short_name}` : "Eligible for PMEGP"}
+            color="bg-primary"
+          />
+          <HealthMetric
+            title="COMPETITION"
+            value={71}
+            label={analysis?.market?.competition_level ? `${analysis.market.competition_level} competition` : "Moderate competition"}
+            color="bg-muted"
+          />
         </div>
       </div>
 
@@ -403,26 +443,35 @@ export function DashboardView() {
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            {JOURNEY_STEPS.map((step) => (
-              <div key={step.id} className="flex items-start gap-3 text-sm">
-                <span
-                  className={cn(
-                    'grid size-7 shrink-0 place-items-center rounded-full text-xs font-extrabold mt-0.5',
-                    step.status === 'completed'
-                      ? 'bg-primary text-white'
-                      : step.status === 'current'
-                        ? 'bg-primary/20 text-primary border border-primary/40'
-                        : 'bg-muted text-muted-foreground',
-                  )}
-                >
-                  {step.status === 'completed' ? <CheckCircle2 className="size-4" /> : step.id}
-                </span>
-                <div>
-                  <h4 className="font-bold text-foreground leading-snug">{step.title}</h4>
-                  <p className="text-xs text-muted-foreground">{step.subtitle}</p>
+            {JOURNEY_STEPS.map((step) => {
+              const subtitleText =
+                step.id === 3
+                  ? (analysis?.scheme?.status === 'matched' && analysis?.scheme?.recommended_scheme
+                      ? `${analysis.scheme.recommended_scheme.short_name || analysis.scheme.recommended_scheme.name} Matched`
+                      : 'Government Scheme Eligible')
+                  : step.subtitle
+
+              return (
+                <div key={step.id} className="flex items-start gap-3 text-sm">
+                  <span
+                    className={cn(
+                      'grid size-7 shrink-0 place-items-center rounded-full text-xs font-extrabold mt-0.5',
+                      step.status === 'completed'
+                        ? 'bg-primary text-white'
+                        : step.status === 'current'
+                          ? 'bg-primary/20 text-primary border border-primary/40'
+                          : 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {step.status === 'completed' ? <CheckCircle2 className="size-4" /> : step.id}
+                  </span>
+                  <div>
+                    <h4 className="font-bold text-foreground leading-snug">{step.title}</h4>
+                    <p className="text-xs text-muted-foreground">{subtitleText}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </CardContent>
         </Card>
 

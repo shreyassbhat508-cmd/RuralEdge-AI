@@ -20,6 +20,14 @@ class BusinessAnalyzeRequest(BaseModel):
     business_category: str = Field(..., min_length=1, max_length=100, description="Business category (required)")
     margin_capital: float = Field(..., ge=0, description="Beneficiary margin contribution (>= 0)")
     project_cost: float = Field(..., gt=0, le=100000000, description="Total project cost (> 0)")
+    age: Optional[int] = Field(None, ge=0, le=150, description="Age in years (optional)")
+    gender: Optional[str] = Field(None, max_length=50, description="Gender (optional)")
+    annual_income: Optional[float] = Field(None, ge=0, description="Annual income (optional)")
+    caste_category: Optional[str] = Field(None, max_length=100, description="Caste category (optional)")
+    education: Optional[str] = Field(None, max_length=100, description="Education qualification (optional)")
+    disability: Optional[bool] = Field(None, description="Disability status (optional)")
+    land_owned: Optional[bool] = Field(None, description="Land ownership status (optional)")
+    business_exists: Optional[bool] = Field(None, description="Existing business status (optional)")
 
     @field_validator("business_category", mode="before")
     @classmethod
@@ -60,6 +68,11 @@ class BusinessInfo(BaseModel):
 class MarketInfo(BaseModel):
     status: str = "insufficient_data"
     message: str = "Market intelligence data is not available yet."
+    data_source: Optional[str] = None
+    demand_score: Optional[int] = None
+    demand_label: Optional[str] = None
+    competition_level: Optional[str] = None
+    market_summary: Optional[str] = None
 
 
 class OpportunityInfo(BaseModel):

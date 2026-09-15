@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Any, Dict, List, Optional, cast
 from app.database import supabase
 from app.schemas.recommendation import RecommendationRequest
@@ -89,9 +90,13 @@ def _is_eligibility_compatible(elig: Dict[str, Any], request: RecommendationRequ
         e_occ = str(occ_val).strip().lower()
         u_occ = request.occupation.strip().lower()
         if e_occ not in ["all", "any", "all occupations", "any occupation"]:
-            u_words = set(u_occ.split())
-            e_words = set(e_occ.split())
-            if not u_words.intersection(e_words) and u_occ not in e_occ and e_occ not in u_occ:
+            stop_words = {"and", "or", "in", "of", "for", "the", "a", "an", "with", "to", "is", "are"}
+            u_words = set(w for w in re.sub(r'[^\w\s]', ' ', u_occ).lower().split() if w not in stop_words)
+            e_words = set(w for w in re.sub(r'[^\w\s]', ' ', e_occ).lower().split() if w not in stop_words)
+            clean_u_occ = " ".join(re.sub(r'[^\w\s]', ' ', u_occ).lower().split())
+            clean_e_occ = " ".join(re.sub(r'[^\w\s]', ' ', e_occ).lower().split())
+            phrase_match = (clean_u_occ in clean_e_occ) or (clean_e_occ in clean_u_occ)
+            if not u_words.intersection(e_words) and not phrase_match:
                 return False
 
     # Education check

@@ -234,6 +234,14 @@ export interface BusinessAnalyzeRequest {
   business_category: string
   margin_capital: number
   project_cost: number
+  age?: number
+  gender?: string
+  annual_income?: number
+  caste_category?: string
+  education?: string
+  disability?: boolean
+  land_owned?: boolean
+  business_exists?: boolean
 }
 
 export interface BusinessAnalyzeResponse {

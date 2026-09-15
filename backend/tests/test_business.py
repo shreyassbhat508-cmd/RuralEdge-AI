@@ -66,11 +66,11 @@ class TestBusinessAnalyzeEndpoint(unittest.TestCase):
         self.assertIsNotNone(data["finance"]["approx_monthly_payment"])
 
         # Verify market object
-        self.assertEqual(data["market"]["status"], "insufficient_data")
+        self.assertEqual(data["market"]["status"], "estimated")
 
         # Verify opportunity object
-        self.assertEqual(data["opportunity"]["status"], "pending_market_analysis")
-        self.assertIsNone(data["opportunity"]["score"])
+        self.assertEqual(data["opportunity"]["status"], "estimated")
+        self.assertEqual(data["opportunity"]["score"], 78.0)
 
         # Verify scheme object
         self.assertEqual(data["scheme"]["status"], "matched")

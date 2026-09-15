@@ -35,6 +35,10 @@ export interface BusinessProfile {
   gender?: string
   annualIncome?: number
   category?: string
+  education?: string
+  disability?: boolean
+  landOwned?: boolean
+  businessExists?: boolean
 }
 
 export const DEFAULT_PROFILE: BusinessProfile = {
@@ -127,7 +131,7 @@ export interface Scheme {
 export const SCHEMES: Scheme[] = [
   {
     id: 'micro',
-    name: 'Micro Finance Scheme',
+    name: 'MUDRA / Micro-Credit Scheme',
     tagline: 'Designed for small, first-step business projects',
     minCost: 0,
     maxCost: 140000,
@@ -140,7 +144,7 @@ export const SCHEMES: Scheme[] = [
   },
   {
     id: 'term',
-    name: 'Term Loan Scheme',
+    name: 'Bank Term Loan Scheme',
     tagline: 'Designed for larger business projects',
     minCost: 140000,
     maxCost: 5000000,
@@ -191,24 +195,24 @@ export const DETAILED_SCHEMES: DetailedScheme[] = [
     requiredDocs: ['Aadhaar Card', 'Project Report', 'EDP Training Certificate', 'Caste/Category Cert (if applicable)'],
   },
   {
-    id: 'term-loan',
-    name: 'RuralEdge Term Loan Scheme',
-    code: 'GTL-SERIES-A',
+    id: 'ahidf',
+    name: 'Animal Husbandry Infrastructure Development Fund (AHIDF)',
+    code: 'AHIDF-DAHD',
     matchPct: 91,
-    tagline: 'Long-term business capital funding with 6-month moratorium',
+    tagline: 'Govt interest subvention scheme for dairy and livestock processing units',
     maxFinancing: 4500000,
     contributionPct: 10,
-    interestRate: 8.0,
+    interestRate: 6.5,
     tenureYears: 7,
     status: 'Highly suitable',
     eligibilityRationale:
-      'Ideal for your ₹8.5L dairy project. Gives you 6 months grace period before principal repayment begins.',
+      'Ideal for your dairy project. Offers 3% interest subvention and 2-year principal moratorium.',
     keyBenefits: [
-      '90% project cost coverage',
-      '6-month moratorium on principal repayment',
-      'Flexible monthly or quarterly repayment plans',
+      '3% per annum interest subvention',
+      'Up to 24-month moratorium on principal repayment',
+      'Credit guarantee support under NABARD',
     ],
-    requiredDocs: ['Aadhaar Card', '6-Month Bank Statement', 'RuralEdge Business Viability Assessment'],
+    requiredDocs: ['Aadhaar Card', '6-Month Bank Statement', 'Detailed Project Report (DPR)'],
   },
   {
     id: 'mudra-kishore',
@@ -231,24 +235,24 @@ export const DETAILED_SCHEMES: DetailedScheme[] = [
     requiredDocs: ['Aadhaar Card', 'Address Proof', 'Business Quotation / Invoice'],
   },
   {
-    id: 'micro-finance',
-    name: 'RuralEdge Micro Finance Scheme',
-    code: 'GMF-STARTER',
+    id: 'pashu-bhagya',
+    name: 'Pashu Bhagya Scheme (Karnataka)',
+    code: 'PASHU-BHAGYA-KA',
     matchPct: 89,
-    tagline: 'Low-interest starter capital for small village enterprises',
-    maxFinancing: 125000,
+    tagline: 'Subsidized capital support for dairy farming in Karnataka',
+    maxFinancing: 150000,
     contributionPct: 10,
-    interestRate: 6.5,
+    interestRate: 0.0,
     tenureYears: 3,
     status: 'Highly suitable',
     eligibilityRationale:
-      'Provides quick low-interest seed capital for equipment purchases and preliminary operational expenses.',
+      'Provides 33% to 50% back-ended capital subsidy for establishing 2 to 5 cattle dairy units in Karnataka.',
     keyBenefits: [
-      'Low 6.5% interest rate',
-      'Simple 3-step verification process',
-      '3-month grace period before repayment',
+      'Up to 50% back-ended capital subsidy',
+      'Subsidized cattle insurance coverage',
+      'Interest-free loans via cooperative banks',
     ],
-    requiredDocs: ['Aadhaar Card', 'Village Resident Verification Letter'],
+    requiredDocs: ['Aadhaar Card', 'Karnataka Resident Certificate', 'Bank Passbook'],
   },
 ]
 
@@ -281,14 +285,14 @@ export const MAIN_RECOMMENDATION: RecommendationProfile = {
     'Strong local demand (3,240 households & local institution buyers nearby)',
     'Suitable local resources (existing land parcel and fresh water access)',
     'Fits your available capital (₹85,000 contribution unlocks ₹7.65L loan)',
-    'Financing options available (94% eligibility for PMEGP & Term Loan)',
+    'Financing options available (High eligibility for PMEGP & MUDRA Kishore)',
     'Moderate competition with high margin potential on processed curd/paneer',
   ],
   keyHighlights: [
     { label: 'Monthly Net Profit', value: '₹24,500' },
     { label: 'Break-even Period', value: '11 months' },
     { label: 'Market Reach', value: '3,240 Households' },
-    { label: 'Loan Scheme', value: 'PMEGP / Term Loan' },
+    { label: 'Loan Scheme', value: 'PMEGP / MUDRA' },
   ],
 }
 
@@ -334,7 +338,7 @@ export const ALTERNATIVE_RECOMMENDATIONS: RecommendationProfile[] = [
       { label: 'Monthly Net Profit', value: '₹15,000' },
       { label: 'Break-even Period', value: '9 months' },
       { label: 'Market Reach', value: '5 Villages' },
-      { label: 'Loan Scheme', value: 'Micro Finance Scheme' },
+      { label: 'Loan Scheme', value: 'MUDRA Shishu' },
     ],
   },
   {
@@ -381,7 +385,7 @@ export const DOCUMENT_CHECKLIST: DocumentItem[] = [
     id: 'doc-address',
     title: 'Address Proof / Ration Card',
     description: 'Proof of residence in target village / rural block',
-    requiredFor: 'PMEGP & Term Loan',
+    requiredFor: 'PMEGP & MUDRA Schemes',
     isDone: true,
   },
   {
@@ -417,7 +421,7 @@ export interface JourneyStep {
 export const JOURNEY_STEPS: JourneyStep[] = [
   { id: 1, title: 'Choose Business', subtitle: 'Dairy Farming (87% Match)', status: 'completed' },
   { id: 2, title: 'Find Financing', subtitle: '₹7.65L Loan Planned', status: 'completed' },
-  { id: 3, title: 'Match Government Scheme', subtitle: 'PMEGP & Term Loan Eligible', status: 'completed' },
+  { id: 3, title: 'Match Government Scheme', subtitle: 'Government Scheme Eligible', status: 'completed' },
   { id: 4, title: 'Prepare Documents', subtitle: '2 of 5 documents ready', status: 'current' },
   { id: 5, title: 'Apply for Financing', subtitle: 'Submit to DIC / Bank Officer', status: 'upcoming' },
   { id: 6, title: 'Start Business', subtitle: 'Procure livestock & setup space', status: 'upcoming' },
@@ -772,7 +776,7 @@ export const ADVISOR_ANSWERS: { match: string; answer: string }[] = [
   {
     match: 'afford',
     answer:
-      'Based on your current monthly surplus of about ₹24,500, your projected cash flow appears sufficient to handle the estimated repayment of your ₹9,00,000 term loan. You have a reasonable safety cushion, but keep at least two months of expenses in reserve before committing.',
+      'Based on your current monthly surplus of about ₹24,500, your projected cash flow appears sufficient to handle the estimated repayment of your ₹9,00,000 bank loan. You have a reasonable safety cushion, but keep at least two months of expenses in reserve before committing.',
   },
   {
     match: 'expand',
@@ -797,7 +801,7 @@ export const ADVISOR_ANSWERS: { match: string; answer: string }[] = [
   {
     match: 'scheme',
     answer:
-      'Given your project size of ₹10,00,000 and ₹1,00,000 margin, the Term Loan Scheme (8% p.a., 7 years, 6-month moratorium) is your most relevant financing route. Check the Government Support page for the full conditions.',
+      'Given your project size of ₹10,00,000 and ₹1,00,000 margin, PMEGP or MUDRA Kishore (8.5% p.a., 5-7 years) is your most relevant government scheme financing route. Check the Government Support page for full details.',
   },
 ]
 

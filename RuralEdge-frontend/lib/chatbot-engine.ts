@@ -59,7 +59,7 @@ export function processChatbotQuery(query: string): ChatbotResponse {
       steps: [
         'Identify land & water source in your village.',
         'Prepare project report for cattle shed & livestock procurement.',
-        'Apply for PMEGP or RuralEdge Term Loan with Bank Statement.',
+        'Apply for PMEGP or MUDRA Loan with Bank Statement.',
       ],
       card: {
         title: 'PMEGP — Dairy Micro-Enterprise Support',
@@ -93,12 +93,12 @@ export function processChatbotQuery(query: string): ChatbotResponse {
       bulletPoints: [
         'PMEGP: Credit-linked subsidy up to 35% for rural projects up to ₹25 Lakhs.',
         'MUDRA Kishore: Collateral-free loans up to ₹5 Lakhs for working capital.',
-        'RuralEdge Micro Finance: Low 6.5% interest rate for starter micro-projects.',
+        'Pashu Bhagya KA: Up to 50% capital subsidy for Karnataka dairy units.',
       ],
       numbers: [
         { label: 'Max PMEGP Support', value: '₹25,00,000' },
         { label: 'MUDRA Cap', value: '₹5,00,000' },
-        { label: 'Micro Interest', value: '6.5% p.a.' },
+        { label: 'AHIDF Subvention', value: '3.0% p.a.' },
       ],
       card: {
         title: 'Prime Minister Employment Generation Programme (PMEGP)',
@@ -129,13 +129,13 @@ export function processChatbotQuery(query: string): ChatbotResponse {
       explanation:
         'Getting loan approval for a rural business depends on project cost, margin contribution, and repayment capacity.',
       bulletPoints: [
-        'Micro Finance: Ideal for initial capital up to ₹1.4L with 6.5% interest rate.',
-        'Term Loans: Suitable for larger setups (₹1.4L – ₹50L) with up to 7-year repayment tenure.',
+        'MUDRA Micro-Loans: Ideal for initial capital up to ₹50,000 - ₹5L with zero collateral.',
+        'Bank & PMEGP Loans: Suitable for setups up to ₹50L with 5 to 7-year repayment tenure.',
         'Moratorium Period: Grace period of 3 to 6 months before principal repayment starts.',
       ],
       numbers: [
         { label: 'Margin Required', value: '10% – 15%' },
-        { label: 'Term Loan Rate', value: '8.0% – 8.5%' },
+        { label: 'Bank Interest Rate', value: '8.0% – 8.5%' },
         { label: 'Repayment Tenure', value: '3 to 7 Years' },
       ],
       steps: [
@@ -144,8 +144,8 @@ export function processChatbotQuery(query: string): ChatbotResponse {
         'Submit Bank Statement & Aadhaar to your local bank branch or JanSamarth portal.',
       ],
       card: {
-        title: 'RuralEdge Business Term Loan',
-        code: 'RURAL-TERM-80',
+        title: 'MUDRA / Bank Micro-Loan',
+        code: 'MUDRA-BANK-LOAN',
         subsidyBadge: '6-Month Moratorium Included',
         eligibility: 'Rural micro-entrepreneurs with verified business viability plan.',
         support: '90% project cost coverage with flexible monthly or quarterly repayment schedule.',
@@ -231,7 +231,7 @@ export function processChatbotQuery(query: string): ChatbotResponse {
         title: 'Standard Rural Loan Document Checklist',
         code: 'DOC-CHECKLIST-v1',
         subsidyBadge: 'Verified Checklist',
-        eligibility: 'Applicable for all PMEGP, MUDRA, and Bank Term Loan applications.',
+        eligibility: 'Applicable for all PMEGP, MUDRA, and Bank Loan applications.',
         support: 'Ensures fast-track processing without application rejections.',
         documents: [
           'Aadhaar Card & Passport Size Photographs',
